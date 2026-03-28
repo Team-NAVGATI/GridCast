@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GridCast - Smart Grid Load Prediction</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #050b14;
+  --bg2: #080f1c;
+  --bg3: #0c1628;
+  --cyan: #00e5ff;
+  --cyan2: #00b8d9;
+  --amber: #ffab00;
+  --green: #00e676;
+  --red: #ff1744;
+  --text: #e8edf5;
+  --muted: #6b7a96;
+  --border: rgba(0,229,255,0.12);
+  --card: rgba(12,22,40,0.85);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  overflow-x:hidden;
+}
+
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:0;
+  opacity:.5;
+}
+
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.2rem 3rem;
+  background:rgba(5,11,20,.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.logo{
+  font-family:'Syne',sans-serif;
+  font-weight:800;font-size:1.4rem;
+  letter-spacing:-0.02em;
+  color:var(--cyan);
+  display:flex;align-items:center;gap:.5rem;
+}
+.logo-dot{width:8px;height:8px;background:var(--amber);border-radius:50%;animation:pulse 2s ease-in-out infinite;}
+.nav-links{display:flex;gap:2.5rem;list-style:none;}
+.nav-links a{
+  color:var(--muted);text-decoration:none;font-size:.9rem;letter-spacing:.05em;text-transform:uppercase;transition:all .2s;position:relative;
+}
+.nav-links a:hover{
+  color:var(--cyan);
+}
+.nav-links a::after{
+  content:'';position:absolute;bottom:-4px;left:0;right:0;height:1px;background:var(--cyan);transform:scaleX(0);transform-origin:left;transition:transform .2s;
+}
+.nav-links a:hover::after{
+  transform:scaleX(1);
+}
+.nav-cta{
+  background:transparent;border:1px solid var(--cyan);
+  color:var(--cyan);padding:.55rem 1.4rem;
+  font-family:'DM Sans',sans-serif;font-size:.9rem;cursor:pointer;
+  transition:all .2s;letter-spacing:.05em;
+}
+.nav-cta:hover{background:var(--cyan);color:var(--bg);}
+
+#hero{
+  position:relative;min-height:130vh;
+  display:flex;align-items:center;
+  padding:0 3rem;overflow:hidden;padding-top:8rem;
+}
+.hero-bg{position:absolute;inset:0;z-index:0;}
+.hero-content{position:relative;z-index:2;max-width:700px;}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:.6rem;
+  font-family:'Space Mono',monospace;font-size:.75rem;
+  color:var(--cyan);letter-spacing:.15em;text-transform:uppercase;
+  border:1px solid var(--border);padding:.4rem 1rem;margin-bottom:2rem;
+}
+.eyebrow-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1.5s ease-in-out infinite;}
+h1{
+  font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,4rem);
+  font-weight:800;line-height:1.0;letter-spacing:-0.03em;
+  margin-bottom:1.5rem;
+}
+h1 .accent{color:var(--cyan);position:relative;}
+h1 .accent::after{
+  content:'';position:absolute;left:0;bottom:-4px;right:0;
+  height:2px;background:var(--cyan);transform:scaleX(0);transform-origin:left;
+  animation:underline-grow 1s .8s cubic-bezier(.4,0,.2,1) forwards;
+}
+.hero-sub{
+  font-size:0.95rem;color:var(--muted);line-height:1.7;
+  max-width:520px;margin-bottom:2.5rem;
+}
+.hero-actions{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;}
+.btn-primary{
+  background:var(--cyan);color:var(--bg);
+  padding:.85rem 2rem;font-family:'Syne',sans-serif;
+  font-weight:700;font-size:.95rem;border:none;cursor:pointer;
+  letter-spacing:.03em;transition:all .2s;box-shadow:0 4px 12px rgba(0,229,255,.2);
+}
+.btn-primary:hover{background:var(--cyan2);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,229,255,.3);}
+.btn-ghost{
+  color:var(--text);text-decoration:none;
+  font-size:.9rem;display:flex;align-items:center;gap:.5rem;
+  border-bottom:2px solid var(--cyan);padding-bottom:2px;
+  transition:all .2s;
+}
+.btn-ghost:hover{color:var(--cyan);border-bottom-color:var(--cyan)}
+.hero-stats{
+  display:flex;gap:3rem;margin-top:4rem;
+  padding-top:2rem;border-top:1px solid var(--border);
+}
+.stat-val{
+  font-family:'Space Mono',monospace;font-size:2rem;
+  font-weight:700;color:var(--cyan);
+}
+.stat-label{font-size:.8rem;color:var(--muted);margin-top:.2rem;letter-spacing:.05em;}
+
+.hero-visual{
+  position:absolute;right:-2rem;top:44%;transform:translateY(-50%);
+  z-index:1;opacity:.9;
+}
+
+section{position:relative;z-index:1;}
+.section-label{
+  font-family:'Space Mono',monospace;font-size:.7rem;
+  color:var(--cyan);letter-spacing:.2em;text-transform:uppercase;
+  margin-bottom:1rem;opacity:.9;font-weight:500;
+}
+.section-title{
+  font-family:'Syne',sans-serif;font-size:clamp(2rem,4vw,3.2rem);
+  font-weight:800;line-height:1.1;letter-spacing:-.02em;
+  margin-bottom:1.5rem;
+}
+.section-body{font-size:1.05rem;color:var(--muted);line-height:1.8;max-width:560px;}
+
+#what-grid{
+  padding:7rem 3rem;
+  background:linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+}
+.grid-layout{
+  display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;
+  max-width:1200px;margin:0 auto;
+}
+.grid-infographic{
+  background:var(--card);border:1px solid var(--border);
+  padding:2rem;position:relative;overflow:hidden;
+}
+.grid-infographic::before{
+  content:'LIVE GRID STATUS';
+  position:absolute;top:1rem;left:1rem;
+  font-family:'Space Mono',monospace;font-size:.6rem;
+  color:var(--cyan);letter-spacing:.15em;
+}
+.grid-nodes{display:grid;grid-template-columns:repeat(5,1fr);gap:.8rem;margin-top:2.5rem;}
+.node{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  font-size:.55rem;font-family:'Space Mono',monospace;
+  border:1px solid;color:var(--muted);border-color:var(--border);
+  position:relative;transition:all .3s;
+}
+.node.active{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 12px rgba(0,229,255,.2);}
+.node.warn{border-color:var(--amber);color:var(--amber);box-shadow:0 0 12px rgba(255,171,0,.2);}
+.node.crit{border-color:var(--red);color:var(--red);animation:blink .8s ease-in-out infinite;}
+.grid-legend{display:flex;gap:1.5rem;margin-top:1.5rem;font-size:.7rem;font-family:'Space Mono',monospace;}
+.leg{display:flex;align-items:center;gap:.4rem;}
+.leg-dot{width:8px;height:8px;border-radius:50%;}
+
+#problem{
+  padding:7rem 3rem;
+  background:var(--bg2);
+}
+.problem-inner{max-width:1200px;margin:0 auto;}
+.problem-header{text-align:center;margin-bottom:4rem;}
+.problem-header .section-label,.problem-header .section-title{text-align:center;margin-left:auto;margin-right:auto;}
+.problems-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;}
+.problem-card{
+  background:var(--card);border:1px solid var(--border);
+  padding:2rem;position:relative;overflow:hidden;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+.problem-card:hover{border-color:rgba(0,229,255,.35);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,229,255,.1);}
+.problem-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--amber),transparent);
+}
+.problem-num{
+  font-family:'Space Mono',monospace;font-size:3rem;font-weight:700;
+  color:rgba(255,171,0,.1);position:absolute;top:1rem;right:1rem;
+  line-height:1;
+}
+.problem-icon{
+  width:46px;height:46px;border:2px solid var(--amber);
+  color:var(--amber);font-family:'Space Mono',monospace;font-size:.75rem;
+  font-weight:700;display:flex;align-items:center;justify-content:center;
+  margin-bottom:1rem;background:rgba(255,171,0,.06);border-radius:2px;transition:all .3s;
+}
+.problem-card:hover .problem-icon{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.08);}
+.problem-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:.6rem;}
+.problem-desc{font-size:.9rem;color:var(--muted);line-height:1.6;}
+.problem-stat{
+  margin-top:1.2rem;padding-top:1.2rem;border-top:1px solid var(--border);
+  font-family:'Space Mono',monospace;font-size:.75rem;color:var(--amber);
+}
+
+#how{
+  padding:7rem 3rem;
+  background:var(--bg);
+}
+.how-inner{max-width:1200px;margin:0 auto;}
+.pipeline-steps{
+  display:grid;grid-template-columns:repeat(6,1fr);gap:0;
+  margin-top:4rem;position:relative;
+}
+.pipeline-steps::before{
+  content:'';position:absolute;top:28px;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  z-index:0;
+}
+.step{
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;padding:0 .5rem;position:relative;z-index:1;
+}
+.step-icon{
+  width:56px;height:56px;border:1px solid var(--cyan);
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg);font-size:.8rem;margin-bottom:1rem;
+  position:relative;color:var(--cyan);font-family:'Space Mono',monospace;
+  letter-spacing:.08em;font-weight:700;
+}
+.step-icon::after{
+  content:'';position:absolute;inset:-3px;border:1px solid rgba(0,229,255,.2);
+}
+.step-num{
+  font-family:'Space Mono',monospace;font-size:.6rem;
+  color:var(--cyan);letter-spacing:.1em;margin-bottom:.4rem;
+}
+.step-name{font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;margin-bottom:.3rem;}
+.step-desc{font-size:.72rem;color:var(--muted);line-height:1.5;}
+
+#demo{
+  padding:7rem 3rem;
+  background:var(--bg2);
+}
+.demo-inner{max-width:1200px;margin:0 auto;}
+.demo-layout{display:grid;grid-template-columns:1fr 2fr;gap:3rem;align-items:start;margin-top:3rem;}
+.demo-kpis{display:flex;flex-direction:column;gap:1rem;}
+.kpi-card{
+  background:var(--card);border:1px solid var(--border);
+  padding:1.5rem;display:flex;align-items:center;gap:1rem;
+}
+.kpi-icon{
+  width:34px;height:34px;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Mono',monospace;font-size:.6rem;
+  color:var(--muted);background:rgba(255,255,255,.01);
+}
+.kpi-val{font-family:'Space Mono',monospace;font-size:1.5rem;font-weight:700;}
+.kpi-val.cyan{color:var(--cyan);}
+.kpi-val.amber{color:var(--amber);}
+.kpi-val.green{color:var(--green);}
+.kpi-label{font-size:.78rem;color:var(--muted);letter-spacing:.05em;}
+.demo-chart-wrap{
+  background:var(--card);border:1px solid var(--border);
+  padding:2rem;
+}
+.chart-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:1.5rem;
+}
+.chart-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;}
+.chart-badge{
+  font-family:'Space Mono',monospace;font-size:.65rem;
+  color:var(--green);border:1px solid var(--green);padding:.25rem .6rem;
+  display:flex;align-items:center;gap:.4rem;
+}
+.chart-badge::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1s infinite;}
+
+#impact{
+  padding:7rem 3rem;
+  background:linear-gradient(180deg,var(--bg) 0%, var(--bg3) 100%);
+}
+.impact-inner{max-width:1200px;margin:0 auto;}
+.impact-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;margin-top:4rem;}
+.impact-card{
+  padding:2.5rem 1.5rem;
+  border:1px solid var(--border);
+  text-align:center;position:relative;overflow:hidden;
+  transition:all .3s cubic-bezier(.4,0,.2,1);background:rgba(0,229,255,.02);
+}
+.impact-card:hover{border-color:var(--cyan);transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,229,255,.12);}
+.impact-card::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 100%,rgba(0,229,255,.06),transparent 70%);
+}
+.impact-val{
+  font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;
+  color:var(--cyan);line-height:1;margin-bottom:.5rem;
+}
+.impact-label{font-size:.85rem;color:var(--muted);line-height:1.5;}
+.impact-sub{font-size:.75rem;color:rgba(107,122,150,.6);margin-top:.5rem;font-family:'Space Mono',monospace;}
+
+#tech{
+  padding:7rem 3rem;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+}
+.tech-inner{max-width:1200px;margin:0 auto;}
+.tech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem;}
+.tech-card{
+  background:var(--card);border:1px solid var(--border);
+  padding:1.8rem;display:flex;gap:1rem;align-items:flex-start;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+.tech-card:hover{border-color:rgba(0,229,255,.3);transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,229,255,.08);}
+.tech-glyph{
+  width:40px;height:40px;border:2px solid var(--cyan);
+  color:var(--cyan);display:flex;align-items:center;justify-content:center;
+  font-family:'Space Mono',monospace;font-size:.7rem;font-weight:700;background:rgba(0,229,255,.04);flex-shrink:0;border-radius:2px;
+}
+.tech-name{font-family:'Syne',sans-serif;font-weight:700;margin-bottom:.3rem;}
+.tech-desc{font-size:.85rem;color:var(--muted);line-height:1.5;}
+
+#cta{
+  padding:8rem 3rem;
+  text-align:center;
+  background:var(--bg);
+  position:relative;overflow:hidden;
+}
+#cta::before{
+  content:'';position:absolute;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  width:600px;height:300px;
+  background:radial-gradient(ellipse,rgba(0,229,255,.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+#cta .section-title{max-width:700px;margin:1rem auto 2rem;}
+.cta-buttons{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;}
+.cta-sub{color:var(--muted);font-size:.85rem;margin-top:1.5rem;font-family:'Space Mono',monospace;}
+
+.road-dot{
+  width:32px;height:32px;border-radius:0;display:flex;align-items:center;justify-content:center;
+  font-size:.55rem;font-family:'Space Mono',monospace;font-weight:700;margin:0 auto 1rem;
+}
+.road-done{background:var(--cyan);color:var(--bg);}
+.road-next{background:rgba(255,171,0,.2);border:1px solid var(--amber);color:var(--amber);}
+.road-plan{background:rgba(107,122,150,.1);border:1px solid var(--border);color:var(--muted);}
+
+footer{
+  padding:3rem;border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:.8rem;color:var(--muted);font-family:'Space Mono',monospace;background:rgba(5,11,20,.5);
+}
+
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+@keyframes underline-grow{to{transform:scaleX(1);}}
+@keyframes draw{to{stroke-dashoffset:0;}}
+
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.visible{opacity:1;transform:none;}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);}
+
+@media(max-width:900px){
+  .grid-layout,.demo-layout,.problems-grid,.impact-grid,.tech-grid{grid-template-columns:1fr;}
+  .pipeline-steps{grid-template-columns:repeat(3,1fr);gap:2rem;}
+  .pipeline-steps::before{display:none;}
+  .hero-visual{display:none;}
+  nav{padding:1rem 1.5rem;}
+  #hero,#what-grid,#problem,#how,#demo,#impact,#tech,#cta{padding-left:1.5rem;padding-right:1.5rem;}
+  .hero-stats{flex-wrap:wrap;gap:1.5rem;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <span class="logo-dot"></span> GridCast
+  </div>
+  <ul class="nav-links">
+    <li><a href="#what-grid">Grid</a></li>
+    <li><a href="#problem">Problem</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#impact">Impact</a></li>
+    <li><a href="#tech">Tech</a></li>
+  </ul>
+  <button class="nav-cta" onclick="window.location.href='login.html'">Request Demo</button>
+</nav>
+
+<section id="hero">
+  <div class="hero-bg">
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;">
+      <defs>
+        <pattern id="grid-pat" width="60" height="60" patternUnits="userSpaceOnUse">
+          <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(0,229,255,0.04)" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid-pat)"/>
+      <radialGradient id="hglow" cx="30%" cy="60%" r="50%">
+        <stop offset="0%" stop-color="rgba(0,229,255,0.08)"/>
+        <stop offset="100%" stop-color="transparent"/>
+      </radialGradient>
+      <rect width="100%" height="100%" fill="url(#hglow)"/>
+    </svg>
+  </div>
+
+  <div class="hero-visual" style="width:580px;">
+    <svg width="580" height="420" viewBox="0 0 580 420" xmlns="http://www.w3.org/2000/svg" id="hero-svg">
+      <defs>
+        <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(0,229,255,0.3)"/>
+          <stop offset="100%" stop-color="rgba(0,229,255,0)"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <line x1="40" y1="380" x2="560" y2="380" stroke="rgba(0,229,255,0.2)" stroke-width="1"/>
+      <line x1="40" y1="20" x2="40" y2="380" stroke="rgba(0,229,255,0.2)" stroke-width="1"/>
+      <line x1="40" y1="280" x2="560" y2="280" stroke="rgba(0,229,255,0.06)" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="40" y1="180" x2="560" y2="180" stroke="rgba(0,229,255,0.06)" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="40" y1="80" x2="560" y2="80" stroke="rgba(0,229,255,0.06)" stroke-width="1" stroke-dasharray="4,4"/>
+      <text x="35" y="284" fill="rgba(107,122,150,0.7)" font-size="10" font-family="Space Mono" text-anchor="end">55K</text>
+      <text x="35" y="184" fill="rgba(107,122,150,0.7)" font-size="10" font-family="Space Mono" text-anchor="end">70K</text>
+      <text x="35" y="84" fill="rgba(107,122,150,0.7)" font-size="10" font-family="Space Mono" text-anchor="end">85K</text>
+      <path d="M40,260 Q100,240 160,200 Q220,160 280,140 Q340,120 400,145 Q460,165 560,180
+               L560,210 Q460,195 400,175 Q340,150 280,170 Q220,190 160,230 Q100,265 40,285Z"
+            fill="rgba(0,229,255,0.06)" stroke="none"/>
+      <path id="area-path" d="M40,270 Q100,250 160,210 Q220,170 280,155 Q340,135 400,160 Q460,180 560,195 L560,380 L40,380Z"
+            fill="url(#wg)"/>
+      <path id="forecast-line" d="M40,270 Q100,250 160,210 Q220,170 280,155 Q340,135 400,160 Q460,180 560,195"
+            fill="none" stroke="var(--cyan)" stroke-width="2.5"
+            stroke-dasharray="800" stroke-dashoffset="800" filter="url(#glow)"
+            style="animation:draw 2s .3s cubic-bezier(.4,0,.2,1) forwards;"/>
+      <path d="M40,290 Q100,275 160,240 Q220,200 280,185 Q340,165 400,185"
+            fill="none" stroke="rgba(255,171,0,0.6)" stroke-width="1.5" stroke-dasharray="6,4"/>
+      <circle cx="340" cy="135" r="5" fill="var(--amber)" filter="url(#glow)"/>
+      <line x1="340" y1="135" x2="340" y2="80" stroke="var(--amber)" stroke-width="1" stroke-dasharray="3,3"/>
+      <rect x="305" y="58" width="70" height="20" rx="2" fill="rgba(255,171,0,0.15)" stroke="rgba(255,171,0,0.4)" stroke-width="1"/>
+      <text x="340" y="72" fill="var(--amber)" font-size="9" font-family="Space Mono" text-anchor="middle">PEAK 88.4K MW</text>
+      <circle cx="40" cy="270" r="3" fill="var(--cyan)"/>
+      <circle cx="160" cy="210" r="3" fill="var(--cyan)"/>
+      <circle cx="280" cy="155" r="3" fill="var(--cyan)"/>
+      <circle cx="400" cy="160" r="3" fill="var(--cyan)"/>
+      <circle cx="560" cy="195" r="3" fill="var(--cyan)" opacity=".5"/>
+      <line x1="400" y1="30" x2="400" y2="380" stroke="rgba(0,229,255,0.15)" stroke-width="1" stroke-dasharray="6,4"/>
+      <text x="405" y="45" fill="rgba(0,229,255,0.5)" font-size="9" font-family="Space Mono">FORECAST</text>
+      <text x="40" y="396" fill="rgba(107,122,150,0.7)" font-size="9" font-family="Space Mono" text-anchor="middle">00:00</text>
+      <text x="160" y="396" fill="rgba(107,122,150,0.7)" font-size="9" font-family="Space Mono" text-anchor="middle">06:00</text>
+      <text x="280" y="396" fill="rgba(107,122,150,0.7)" font-size="9" font-family="Space Mono" text-anchor="middle">12:00</text>
+      <text x="400" y="396" fill="rgba(107,122,150,0.7)" font-size="9" font-family="Space Mono" text-anchor="middle">18:00</text>
+      <text x="520" y="396" fill="rgba(107,122,150,0.7)" font-size="9" font-family="Space Mono" text-anchor="middle">24:00</text>
+      <line x1="50" y1="20" x2="80" y2="20" stroke="var(--cyan)" stroke-width="2"/>
+      <text x="85" y="24" fill="var(--muted)" font-size="9" font-family="Space Mono">FORECAST</text>
+      <line x1="170" y1="20" x2="200" y2="20" stroke="rgba(255,171,0,0.7)" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="205" y="24" fill="var(--muted)" font-size="9" font-family="Space Mono">ACTUAL</text>
+    </svg>
+  </div>
+
+  <div class="hero-content">
+    <h1>
+      Predict the Grid.<br>
+      <span class="accent">Before It Breaks.</span>
+    </h1>
+    <p class="hero-sub">
+      GridCast delivers 24-hour electricity load forecasts at 15-minute granularity, giving grid operators the intelligence to dispatch smarter, cut costs, and keep the lights on.
+    </p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="window.location.href='dashboard.html'">See Live Demo</button>
+      <a href="#how" class="btn-ghost">How it works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-val">96</div>
+        <div class="stat-label">Forecast Steps / 24h</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val">15<span style="font-size:1rem">min</span></div>
+        <div class="stat-label">Granularity</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val">&lt;3%</div>
+        <div class="stat-label">Target MAPE</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="what-grid">
+  <div class="grid-layout">
+    <div class="reveal">
+      <p class="section-label">The Grid</p>
+      <h2 class="section-title">What Is a Smart Grid?</h2>
+      <p class="section-body">
+        The electrical grid is the nervous system of modern civilization, a vast interconnected network that generates, transmits, and delivers electricity across thousands of kilometres. Every factory, hospital, and home depends on it operating in perfect real-time balance.
+      </p>
+      <p class="section-body" style="margin-top:1rem;">
+        A <strong style="color:var(--text);">smart grid</strong> layers sensors, data communications, and AI on top of this physical infrastructure. Instead of reacting to failures, it anticipates them, enabling proactive dispatch, renewable integration, and demand-side flexibility.
+      </p>
+      <div style="margin-top:2rem;display:flex;gap:2rem;">
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:1.4rem;color:var(--amber);">4.7B+</div>
+          <div style="font-size:.8rem;color:var(--muted);margin-top:.2rem;">People depend on stable grid access</div>
+        </div>
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:1.4rem;color:var(--cyan);">INR2T+</div>
+          <div style="font-size:.8rem;color:var(--muted);margin-top:.2rem;">Annual grid infrastructure investment globally</div>
+        </div>
+      </div>
+    </div>
+    <div class="reveal">
+      <div class="grid-infographic">
+        <div style="position:absolute;top:1rem;right:1rem;display:flex;align-items:center;gap:.4rem;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--green);">
+          <span style="width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;animation:pulse 1.5s infinite;"></span>MONITORING
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:.7rem;color:var(--cyan);margin-bottom:.5rem;padding-top:.5rem;">NORTH REGIONAL GRID - ZONE MAP</div>
+        <div class="grid-nodes" id="grid-nodes"></div>
+        <div class="grid-legend" style="margin-top:1.5rem;">
+          <div class="leg"><div class="leg-dot" style="background:var(--cyan);"></div><span style="color:var(--muted);">Normal</span></div>
+          <div class="leg"><div class="leg-dot" style="background:var(--amber);"></div><span style="color:var(--muted);">Warning</span></div>
+          <div class="leg"><div class="leg-dot" style="background:var(--red);"></div><span style="color:var(--muted);">Critical</span></div>
+        </div>
+        <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:.7rem;margin-bottom:.5rem;">
+            <span style="color:var(--muted);">CURRENT LOAD</span>
+            <span style="color:var(--cyan);">78,420 MW</span>
+          </div>
+          <div style="background:rgba(0,229,255,.08);height:6px;border-radius:0;overflow:hidden;">
+            <div style="background:linear-gradient(90deg,var(--green),var(--cyan));height:100%;width:82%;transition:width 1s;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:.6rem;margin-top:.3rem;color:var(--muted);">
+            <span>0</span><span>CAPACITY: 95,000 MW</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="problem">
+  <div class="problem-inner">
+    <div class="problem-header reveal">
+      <p class="section-label">The Challenge</p>
+      <h2 class="section-title" style="text-align:center;">A World-Scale Problem<br>Hiding in Plain Sight</h2>
+      <p class="section-body" style="text-align:center;margin:0 auto;color:var(--muted);">
+        Electricity cannot be stored at scale. Every watt generated must be consumed instantly, making forecasting not just useful, but existentially critical.
+      </p>
+    </div>
+    <div class="problems-grid">
+      <div class="problem-card reveal">
+        <div class="problem-num">01</div>
+        <div class="problem-icon">DV</div>
+        <div class="problem-title">Demand Volatility</div>
+        <div class="problem-desc">Consumption patterns shift violently intraday. Heatwaves spike AC load by 30% in hours, while industrial shutdowns drop demand without warning.</div>
+        <div class="problem-stat">+40% swing in peak vs. off-peak load</div>
+      </div>
+      <div class="problem-card reveal">
+        <div class="problem-num">02</div>
+        <div class="problem-icon">RI</div>
+        <div class="problem-title">Renewable Intermittency</div>
+        <div class="problem-desc">Solar and wind power are inherently unpredictable. Grid operators must compensate in real time or risk collapse.</div>
+        <div class="problem-stat">~35% of new capacity is variable renewables</div>
+      </div>
+      <div class="problem-card reveal">
+        <div class="problem-num">03</div>
+        <div class="problem-icon">DE</div>
+        <div class="problem-title">Dispatch Inefficiency</div>
+        <div class="problem-desc">Over-provisioning costly peaker plants to handle uncertainty burns billions annually in unnecessary fuel costs, emissions, and capacity payments.</div>
+        <div class="problem-stat">$150B+ wasted globally on excess reserves</div>
+      </div>
+      <div class="problem-card reveal">
+        <div class="problem-num">04</div>
+        <div class="problem-icon">DQ</div>
+        <div class="problem-title">Data Quality Gaps</div>
+        <div class="problem-desc">Meter faults, communication failures, and sensor drift create corrupted demand time-series, rendering naive forecasts dangerously inaccurate.</div>
+        <div class="problem-stat">Up to 8% of raw grid readings are erroneous</div>
+      </div>
+      <div class="problem-card reveal">
+        <div class="problem-num">05</div>
+        <div class="problem-icon">IS</div>
+        <div class="problem-title">Infrastructure Stress</div>
+        <div class="problem-desc">Aging transmission infrastructure operates near thermal limits. Unexpected load surges cause cascading failures that can take entire regions offline.</div>
+        <div class="problem-stat">70% of global grid assets are over 25 years old</div>
+      </div>
+      <div class="problem-card reveal" style="border-color:rgba(0,229,255,.2);">
+        <div class="problem-num">06</div>
+        <div class="problem-icon" style="border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.08);">GC</div>
+        <div class="problem-title" style="color:var(--cyan);">GridCast Solves This</div>
+        <div class="problem-desc" style="color:var(--text);">By combining a production-grade ML pipeline with operational diagnostics and real-time serving, GridCast closes the forecasting gap between research and operations.</div>
+        <div class="problem-stat" style="color:var(--cyan);">96-step, 24h ahead forecast</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="how-inner">
+    <div class="reveal" style="text-align:center;max-width:600px;margin:0 auto;">
+      <p class="section-label" style="text-align:center;">The System</p>
+      <h2 class="section-title">Six Stages. Zero Gaps.</h2>
+      <p class="section-body" style="margin:0 auto;text-align:center;">A fully automated pipeline from raw NRLDC portal data to a live operational dashboard, with no manual steps required.</p>
+    </div>
+
+    <div class="pipeline-steps">
+      <div class="step reveal">
+        <div class="step-icon">SC</div>
+        <div class="step-num">STAGE 01</div>
+        <div class="step-name">Scrape</div>
+        <div class="step-desc">Selenium-powered automation downloads monthly NRLDC Excel files into versioned raw storage.</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-icon">EX</div>
+        <div class="step-num">STAGE 02</div>
+        <div class="step-name">Extract</div>
+        <div class="step-desc">Parser normalizes heterogeneous Excel layouts into a unified 15-min demand Parquet file.</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-icon">CL</div>
+        <div class="step-num">STAGE 03</div>
+        <div class="step-name">Clean</div>
+        <div class="step-desc">Physics-grounded anomaly detection flags spikes above 5,000 MW and out-of-range readings, then interpolates repairs.</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-icon">ML</div>
+        <div class="step-num">STAGE 04</div>
+        <div class="step-name">Train</div>
+        <div class="step-desc">XGBoost model trained on lag, rolling-stat, and calendar features with season-aware 3-month holdout validation.</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-icon">API</div>
+        <div class="step-num">STAGE 05</div>
+        <div class="step-name">Serve</div>
+        <div class="step-desc">Flask API loads model once at startup and serves 96-step autoregressive forecasts in milliseconds.</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-icon">UI</div>
+        <div class="step-num">STAGE 06</div>
+        <div class="step-name">Visualize</div>
+        <div class="step-desc">Operations dashboard renders forecast chart, KPIs, residual heatmap, and CSV export for grid teams.</div>
+      </div>
+    </div>
+
+    <div class="reveal" style="margin-top:5rem;">
+      <div style="background:var(--card);border:1px solid var(--border);padding:2.5rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:.3rem;">Residual Error Heatmap - Day x Hour</div>
+            <div style="font-size:.8rem;color:var(--muted);">Mean Absolute Percentage Error by day-of-week and hour-of-day over test period</div>
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:.7rem;color:var(--muted);">APE (%)  <span style="color:var(--green)">Low</span> | <span style="color:var(--amber)">Mid</span> | <span style="color:var(--red)">High</span></div>
+        </div>
+        <div id="heatmap-container" style="overflow-x:auto;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="demo">
+  <div class="demo-inner">
+    <div class="reveal">
+      <p class="section-label">In Production</p>
+      <h2 class="section-title">Real-Time Operations Dashboard</h2>
+    </div>
+    <div class="demo-layout">
+      <div class="demo-kpis reveal">
+        <div class="kpi-card">
+          <div class="kpi-icon">LD</div>
+          <div>
+            <div class="kpi-val cyan">78,420</div>
+            <div class="kpi-label">CURRENT LOAD (MW)</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">PK</div>
+          <div>
+            <div class="kpi-val amber">88,140</div>
+            <div class="kpi-label">PEAK FORECAST (MW)</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">AC</div>
+          <div>
+            <div class="kpi-val green">2.4%</div>
+            <div class="kpi-label">MODEL MAPE</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">TM</div>
+          <div>
+            <div class="kpi-val" style="font-size:1rem;color:var(--text);">14:15 IST</div>
+            <div class="kpi-label">LAST UPDATED</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">AP</div>
+          <div>
+            <div class="kpi-val" style="font-size:1rem;color:var(--green);">ONLINE</div>
+            <div class="kpi-label">API STATUS</div>
+          </div>
+        </div>
+      </div>
+      <div class="demo-chart-wrap reveal">
+        <div class="chart-header">
+          <div class="chart-title">24-Hour Load Forecast - Northern Region</div>
+          <div class="chart-badge">LIVE</div>
+        </div>
+        <svg width="100%" viewBox="0 0 520 240" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="dg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(0,229,255,0.25)"/>
+              <stop offset="100%" stop-color="rgba(0,229,255,0)"/>
+            </linearGradient>
+            <filter id="glow2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <line x1="30" y1="40" x2="510" y2="40" stroke="rgba(0,229,255,0.06)" stroke-width="1"/>
+          <line x1="30" y1="100" x2="510" y2="100" stroke="rgba(0,229,255,0.06)" stroke-width="1"/>
+          <line x1="30" y1="160" x2="510" y2="160" stroke="rgba(0,229,255,0.06)" stroke-width="1"/>
+          <line x1="30" y1="220" x2="510" y2="220" stroke="rgba(0,229,255,0.12)" stroke-width="1"/>
+          <text x="25" y="44" fill="rgba(107,122,150,0.7)" font-size="8" font-family="Space Mono" text-anchor="end">90K</text>
+          <text x="25" y="104" fill="rgba(107,122,150,0.7)" font-size="8" font-family="Space Mono" text-anchor="end">75K</text>
+          <text x="25" y="164" fill="rgba(107,122,150,0.7)" font-size="8" font-family="Space Mono" text-anchor="end">60K</text>
+          <path d="M30,185 Q80,175 130,145 Q180,115 230,90 Q260,75 290,80 Q320,87 370,110 Q420,135 470,150 Q490,158 510,162
+                   L510,220 L30,220Z" fill="url(#dg)"/>
+          <path d="M30,175 Q80,163 130,133 Q180,103 230,78 Q260,63 290,68 Q320,75 370,98 Q420,123 470,138 Q490,146 510,150
+                   L510,174 Q490,170 470,162 Q420,147 370,122 Q320,99 290,92 Q260,87 230,102 Q180,127 130,157 Q80,187 30,197Z"
+                fill="rgba(0,229,255,0.07)"/>
+          <path d="M30,185 Q80,175 130,145 Q180,115 230,90 Q260,75 290,80 Q320,87 370,110 Q420,135 470,150 Q490,158 510,162"
+                fill="none" stroke="var(--cyan)" stroke-width="2"
+                stroke-dasharray="900" stroke-dashoffset="900" filter="url(#glow2)"
+                style="animation:draw 2.5s .5s cubic-bezier(.4,0,.2,1) forwards;"/>
+          <circle cx="260" cy="75" r="4" fill="var(--amber)" filter="url(#glow2)"/>
+          <text x="270" y="68" fill="var(--amber)" font-size="8" font-family="Space Mono">PEAK</text>
+          <text x="30" y="233" fill="rgba(107,122,150,0.7)" font-size="8" font-family="Space Mono" text-anchor="middle">00:00</text>
+          <text x="150" y="233" fill="rgba(107,122,150,0.7)" font-size="8" font-family="Space Mono" text-anchor="middle">06:00</text>
+          <text x="270" y="233" fill="rgba(107,122,150,0.7)" font-size="8" font-family="Space Mono" text-anchor="middle">12:00</text>
+          <text x="390" y="233" fill="rgba(107,122,150,0.7)" font-size="8" font-family="Space Mono" text-anchor="middle">18:00</text>
+          <text x="510" y="233" fill="rgba(107,122,150,0.7)" font-size="8" font-family="Space Mono" text-anchor="middle">24:00</text>
+          <line x1="195" y1="30" x2="195" y2="220" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="200" y="38" fill="rgba(255,255,255,0.3)" font-size="7" font-family="Space Mono">NOW</text>
+        </svg>
+        <div style="display:flex;gap:1.5rem;margin-top:1rem;font-family:'Space Mono',monospace;font-size:.7rem;color:var(--muted);">
+          <div style="display:flex;align-items:center;gap:.4rem;"><div style="width:20px;height:2px;background:var(--cyan);"></div>Forecast</div>
+          <div style="display:flex;align-items:center;gap:.4rem;"><div style="width:16px;height:8px;background:rgba(0,229,255,0.12);"></div>Confidence Band</div>
+          <div style="display:flex;align-items:center;gap:.4rem;"><div style="width:6px;height:6px;background:var(--amber);border-radius:50%;"></div>Peak</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="impact">
+  <div class="impact-inner">
+    <div class="reveal" style="text-align:center;max-width:600px;margin:0 auto;">
+      <p class="section-label" style="text-align:center;">Impact</p>
+      <h2 class="section-title">What Accurate Forecasting Unlocks</h2>
+    </div>
+    <div class="impact-grid">
+      <div class="impact-card reveal">
+        <div class="impact-val">-30%</div>
+        <div class="impact-label">Reduction in spinning reserve over-provisioning</div>
+        <div class="impact-sub">DISPATCH EFFICIENCY</div>
+      </div>
+      <div class="impact-card reveal">
+        <div class="impact-val">&lt;3%</div>
+        <div class="impact-label">Target MAPE on 24-hour ahead load forecast</div>
+        <div class="impact-sub">FORECAST ACCURACY</div>
+      </div>
+      <div class="impact-card reveal">
+        <div class="impact-val">96x</div>
+        <div class="impact-label">Decision points per day at 15-min granularity</div>
+        <div class="impact-sub">OPERATIONAL RESOLUTION</div>
+      </div>
+      <div class="impact-card reveal">
+        <div class="impact-val">ms</div>
+        <div class="impact-label">API inference latency for 96-step forecast</div>
+        <div class="impact-sub">REAL-TIME SERVING</div>
+      </div>
+    </div>
+    <div class="reveal" style="margin-top:5rem;background:var(--card);border:1px solid var(--border);padding:2.5rem;">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:2rem;color:var(--text);">Product Roadmap</div>
+      <div style="display:flex;gap:0;position:relative;">
+        <div style="position:absolute;top:16px;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--cyan),transparent);"></div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;width:100%;">
+          <div style="text-align:center;">
+            <div class="road-dot road-done">DONE</div>
+            <div style="font-size:.75rem;font-family:'Syne',sans-serif;font-weight:700;margin-bottom:.3rem;">Core Pipeline</div>
+            <div style="font-size:.7rem;color:var(--muted);">Scrape -> Clean -> Train -> Serve</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="road-dot road-done">DONE</div>
+            <div style="font-size:.75rem;font-family:'Syne',sans-serif;font-weight:700;margin-bottom:.3rem;">Dashboard UI</div>
+            <div style="font-size:.7rem;color:var(--muted);">Forecast chart + heatmap + CSV export</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="road-dot road-next">NEXT</div>
+            <div style="font-size:.75rem;font-family:'Syne',sans-serif;font-weight:700;margin-bottom:.3rem;color:var(--amber);">Weather Features</div>
+            <div style="font-size:.7rem;color:var(--muted);">Exogenous inputs for peak-window robustness</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="road-dot road-plan">PLAN</div>
+            <div style="font-size:.75rem;font-family:'Syne',sans-serif;font-weight:700;margin-bottom:.3rem;color:var(--muted);">Multi-Region</div>
+            <div style="font-size:.7rem;color:var(--muted);">N/S/E/W grid zone abstraction layer</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="road-dot road-plan">PLAN</div>
+            <div style="font-size:.75rem;font-family:'Syne',sans-serif;font-weight:700;margin-bottom:.3rem;color:var(--muted);">LSTM/GRU Backend</div>
+            <div style="font-size:.7rem;color:var(--muted);">Deep learning model registry + auto-retraining</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tech">
+  <div class="tech-inner">
+    <div class="reveal">
+      <p class="section-label">Technology</p>
+      <h2 class="section-title">Built on Production-Grade Stack</h2>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-card reveal">
+        <div class="tech-glyph">ML</div>
+        <div>
+          <div class="tech-name">XGBoost + scikit-learn</div>
+          <div class="tech-desc">Gradient-boosted trees trained on rich lag, rolling-stat, and calendar features. Season-aware holdout validation ensures real temporal generalization.</div>
+        </div>
+      </div>
+      <div class="tech-card reveal">
+        <div class="tech-glyph">ETL</div>
+        <div>
+          <div class="tech-name">Pandas + Parquet Pipeline</div>
+          <div class="tech-desc">DatetimeIndex-first data processing with columnar Parquet storage. Physics-grounded anomaly detection with time interpolation repair.</div>
+        </div>
+      </div>
+      <div class="tech-card reveal">
+        <div class="tech-glyph">API</div>
+        <div>
+          <div class="tech-name">Flask REST API</div>
+          <div class="tech-desc">Lightweight inference service with three endpoints: /health, /forecast (96-step), /residuals. Sub-millisecond latency, CORS-enabled, stateless design.</div>
+        </div>
+      </div>
+      <div class="tech-card reveal">
+        <div class="tech-glyph">BOT</div>
+        <div>
+          <div class="tech-name">Selenium Web Automation</div>
+          <div class="tech-desc">Headless Chrome with WebDriver automates NRLDC SPA navigation, handling pagination, dynamic tables, and partial-download detection.</div>
+        </div>
+      </div>
+      <div class="tech-card reveal">
+        <div class="tech-glyph">UI</div>
+        <div>
+          <div class="tech-name">SVG-Powered Dashboard</div>
+          <div class="tech-desc">Zero-dependency single-file frontend. Renders forecast chart, 7x24 residual heatmap, KPI cards, and model comparison tabs in-browser.</div>
+        </div>
+      </div>
+      <div class="tech-card reveal">
+        <div class="tech-glyph">OPS</div>
+        <div>
+          <div class="tech-name">Artifact-Based Model Lifecycle</div>
+          <div class="tech-desc">joblib model + JSON metadata buffer enables instant API cold-start with no online retraining dependency. Clean separation of training and serving.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cta">
+  <div class="reveal">
+    <p class="section-label" style="text-align:center;">// Get Started</p>
+    <h2 class="section-title">Ready to Predict<br><span style="color:var(--cyan);">Your Grid's Future?</span></h2>
+    <div class="cta-buttons">
+      <button class="btn-primary" style="font-size:1rem;padding:1rem 2.5rem;" onclick="window.location.href='login.html'">Request a Demo</button>
+      <a href="https://github.com/Team-NAVGATI/GridCast" class="btn-ghost" style="font-size:.95rem;" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+    </div>
+    <p class="cta-sub">Team NavGati | Built for NRLDC-scale operations | Open for collaboration</p>
+  </div>
+</section>
+
+<footer>
+  <div>&copy; 2026 GridCast - Team NavGati. All rights reserved.</div>
+  <div>v1.0.0 | XGBoost | Flask | Python</div>
+</footer>
+
+<script>
+const nodeStates = [
+  'active','active','warn','active','active',
+  'active','crit','active','active','warn',
+  'active','active','active','warn','active',
+  'active','active','active','active','active',
+  'warn','active','active','crit','active'
+];
+const nodeLabels = [
+  'DEL-N','DEL-S','HP-01','PB-01','PB-02',
+  'HR-01','HR-02','UK-01','UK-02','RJ-01',
+  'RJ-02','UP-N','UP-S','UP-E','UP-W',
+  'BR-01','JK-01','HP-02','CG-01','MP-01',
+  'MP-02','GJ-01','MH-01','RJ-03','PB-03'
+];
+const container = document.getElementById('grid-nodes');
+nodeStates.forEach((s,i) => {
+  const el = document.createElement('div');
+  el.className = `node ${s}`;
+  el.textContent = nodeLabels[i];
+  container.appendChild(el);
+});
+
+setInterval(() => {
+  const nodes = container.querySelectorAll('.node');
+  const idx = Math.floor(Math.random() * nodes.length);
+  const states = ['active','active','active','warn','crit'];
+  nodes[idx].className = `node ${states[Math.floor(Math.random()*states.length)]}`;
+}, 2200);
+
+function buildHeatmap() {
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const hours = Array.from({length:24},(_,i)=>i);
+  const data = days.map((d,di) => hours.map(h => {
+    const base = 1.5 + Math.sin((h-6)*Math.PI/12)*1.8 + (di>4?0.5:0);
+    return Math.max(0.5, base + (Math.random()-0.5)*0.8);
+  }));
+
+  const cellW = 28, cellH = 28;
+  const svgW = hours.length * cellW + 60;
+  const svgH = days.length * cellH + 40;
+
+  let cells = '';
+  data.forEach((row, ri) => {
+    row.forEach((val, ci) => {
+      const norm = (val - 0.5) / 3.5;
+      const r = Math.round(norm * 255);
+      const g = Math.round((1-norm) * 120 + 20);
+      const b = Math.round((1-norm) * 50);
+      const fill = `rgb(${r},${g},${b})`;
+      const x = ci * cellW + 50;
+      const y = ri * cellH + 20;
+      cells += `<rect x="${x}" y="${y}" width="${cellW-2}" height="${cellH-2}" fill="${fill}" opacity="0.85" rx="1">
+        <title>${days[ri]} ${ci}:00 - APE: ${val.toFixed(2)}%</title>
+      </rect>`;
+      if(val > 3.5) {
+        cells += `<text x="${x+cellW/2-1}" y="${y+cellH/2+3}" fill="white" font-size="7" font-family="Space Mono" text-anchor="middle">${val.toFixed(1)}</text>`;
+      }
+    });
+    cells += `<text x="44" y="${ri*cellH+20+cellH/2+4}" fill="rgba(107,122,150,0.8)" font-size="9" font-family="Space Mono" text-anchor="end">${days[ri]}</text>`;
+  });
+
+  hours.forEach((h,i) => {
+    if(h % 4 === 0) {
+      cells += `<text x="${i*cellW+50+cellW/2}" y="${days.length*cellH+35}" fill="rgba(107,122,150,0.7)" font-size="8" font-family="Space Mono" text-anchor="middle">${String(h).padStart(2,'0')}h</text>`;
+    }
+  });
+
+  const svg = `<svg width="100%" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg">${cells}</svg>`;
+  document.getElementById('heatmap-container').innerHTML = svg;
+}
+buildHeatmap();
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting) { e.target.classList.add('visible'); }
+  });
+}, {threshold: 0.1, rootMargin: '0px 0px -40px 0px'});
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+document.querySelectorAll('.problems-grid .problem-card, .impact-grid .impact-card, .tech-grid .tech-card, .pipeline-steps .step').forEach((el, i) => {
+  el.style.transitionDelay = `${i * 0.08}s`;
+});
+</script>
+</body>
+</html>

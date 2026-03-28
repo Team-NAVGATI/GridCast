@@ -3,53 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grid Load Forecast — GridSense</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Grid Load Forecast — GridCast</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #F5F6F8;
-    --surface: #FFFFFF;
-    --border: #E2E5EA;
-    --border-strong: #C8CDD6;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --border-strong: #cfd8e3;
     --text-primary: #111827;
-    --text-secondary: #6B7280;
-    --text-tertiary: #9CA3AF;
-    --accent: #1B4FD8;
-    --accent-light: #EEF2FF;
-    --accent-muted: #93ABEE;
-    --green: #059669;
-    --green-bg: #ECFDF5;
-    --amber: #D97706;
-    --amber-bg: #FFFBEB;
-    --red: #DC2626;
-    --red-bg: #FEF2F2;
-    --wf-fill: #E8EBF0;
-    --wf-fill-dark: #CDD2DC;
-    --wf-fill-accent: #C5D0F0;
-    --wf-fill-accent-dark: #A3B5E8;
+    --text-secondary: #64748b;
+    --text-tertiary: #94a3b8;
+    --accent: #4c79b8;
+    --accent-light: #f0f4fb;
+    --accent-muted: #6b91c7;
+    --glow-cyan: #00e5ff;
+    --green: #00e676;
+    --green-bg: rgba(0,230,118,0.14);
+    --amber: #ffab00;
+    --amber-bg: rgba(255,171,0,0.14);
+    --red: #ff1744;
+    --red-bg: rgba(255,23,68,0.14);
+    --wf-fill: #f1f5f9;
+    --wf-fill-dark: #d9e2ee;
+    --wf-fill-accent: #d9f2f8;
+    --wf-fill-accent-dark: #8fd9e8;
     --radius: 10px;
-    --shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.04);
+    --shadow: 0 1px 3px rgba(15,23,42,.06), 0 6px 20px rgba(15,23,42,.06);
   }
 
   body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; font-size: 13px; }
 
   /* NAV */
   nav { background: var(--surface); border-bottom: 1px solid var(--border); height: 52px; display: flex; align-items: center; padding: 0 24px; gap: 20px; position: sticky; top: 0; z-index: 100; }
-  .nav-logo { font-size: 14px; font-weight: 600; color: var(--accent); display: flex; align-items: center; gap: 7px; letter-spacing: -.2px; }
-  .nav-logo-icon { width: 26px; height: 26px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
-  .nav-logo-icon svg { width: 14px; height: 14px; }
+  .nav-logo { font-family:'Syne',sans-serif; font-size: 17px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 7px; letter-spacing: -.02em; }
+  .nav-logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #ffab00; animation: brandPulse 2s ease-in-out infinite; }
   .nav-sep { width: 1px; height: 20px; background: var(--border); }
   .nav-tabs { display: flex; gap: 2px; }
   .nav-tab { padding: 5px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; color: var(--text-secondary); cursor: pointer; }
-  .nav-tab.active { background: var(--accent-light); color: var(--accent); }
+  .nav-tab.active { background: var(--accent-light); color: var(--accent); box-shadow: inset 0 -2px 0 var(--amber); }
   .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
   .wf-pill { height: 28px; border-radius: 6px; background: var(--wf-fill); display: inline-flex; align-items: center; padding: 0 12px; font-size: 12px; color: var(--text-secondary); font-weight: 500; }
   .wf-pill.sm { padding: 0 9px; height: 24px; }
-  .wf-pill.accent { background: var(--accent); color: white; cursor: pointer; }
+  .wf-pill.accent { background: var(--accent); color: #ffffff; cursor: pointer; box-shadow: 0 0 0 1px rgba(42,95,179,.15), 0 0 6px rgba(0,229,255,.09); }
   .wf-pill.live::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 5px; animation: blink 2s infinite; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+  @keyframes brandPulse { 0%,100%{opacity:1} 50%{opacity:.45} }
   .wf-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--wf-fill-accent-dark); }
 
   /* LAYOUT */
@@ -133,17 +134,17 @@
   .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
   .legend-line { width: 20px; height: 2px; border-radius: 2px; }
   .legend-band { width: 20px; height: 10px; border-radius: 3px; opacity: .35; }
-  .now-line { position: absolute; top: 0; bottom: 0; width: 1.5px; background: var(--accent); pointer-events: none; }
+  .now-line { position: absolute; top: 0; bottom: 0; width: 1.5px; background: var(--accent); box-shadow: 0 0 4px rgba(0,229,255,.14); pointer-events: none; }
   .now-label { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 700; color: var(--accent); white-space: nowrap; letter-spacing: .06em; text-transform: uppercase; }
-  .annotation { position: absolute; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 10px; font-family: 'DM Mono', monospace; font-weight: 500; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  .annotation { position: absolute; background: #fff9ea; border: 1px solid rgba(255,171,0,.35); border-radius: 6px; padding: 4px 8px; font-size: 10px; font-family: 'DM Mono', monospace; font-weight: 500; color: #8a5a00; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 
   /* HORIZON TOGGLE BUTTONS */
   .horizon-btn { height: 26px; padding: 0 11px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
   .horizon-btn:hover { border-color: var(--accent-muted); color: var(--accent); }
-  .horizon-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .horizon-btn.active { background: var(--accent); border-color: var(--accent); color: #ffffff; box-shadow: 0 0 0 1px rgba(42,95,179,.14), 0 0 5px rgba(0,229,255,.1); }
 
   /* TOOLTIP */
-  .chart-tooltip { position: absolute; background: var(--text-primary); color: white; padding: 7px 10px; border-radius: 7px; font-size: 11px; pointer-events: none; display: none; z-index: 10; white-space: nowrap; }
+  .chart-tooltip { position: absolute; background: #0f1b2f; color: var(--text-primary); padding: 7px 10px; border-radius: 7px; font-size: 11px; pointer-events: none; display: none; z-index: 10; white-space: nowrap; border: 1px solid var(--border); }
   .tooltip-row { display: flex; gap: 6px; align-items: center; margin-top: 3px; }
   .tooltip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
@@ -174,9 +175,9 @@
   .heatmap-wrap { padding: 16px 18px; }
   .hm-grid { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; }
   .hm-cell { height: 20px; border-radius: 2px; cursor: pointer; }
-  .hm-cell.l0 { background: #D1FAE5; } .hm-cell.l1 { background: #6EE7B7; }
-  .hm-cell.l2 { background: #FEF3C7; } .hm-cell.l3 { background: #FCD34D; }
-  .hm-cell.l4 { background: #F87171; } .hm-cell.l5 { background: #DC2626; }
+  .hm-cell.l0 { background: #114434; } .hm-cell.l1 { background: #1e7b58; }
+  .hm-cell.l2 { background: #5c4a10; } .hm-cell.l3 { background: #8d6b09; }
+  .hm-cell.l4 { background: #7e2a3b; } .hm-cell.l5 { background: #c2183f; }
   .hm-scale { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
   .hm-scale-bar { display: flex; gap: 2px; flex: 1; }
   .hm-scale-cell { flex: 1; height: 8px; border-radius: 1px; }
@@ -187,6 +188,7 @@
   .peak-item-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-tertiary); font-weight: 600; }
   .peak-item-val { font-size: 20px; font-weight: 600; font-family: 'DM Mono', monospace; margin-top: 4px; letter-spacing: -.5px; }
   .peak-item-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+  #peakVal { color: var(--amber); }
 
   /* LOADING STATE */
   .skeleton { background: linear-gradient(90deg, var(--wf-fill) 25%, var(--border) 50%, var(--wf-fill) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px; }
@@ -205,13 +207,8 @@
 <!-- NAV -->
 <nav>
   <div class="nav-logo">
-    <div class="nav-logo-icon">
-      <svg viewBox="0 0 14 14" fill="none">
-        <path d="M2 10L5 6L8 8L12 3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="12" cy="3" r="1.2" fill="white"/>
-      </svg>
-    </div>
-    GridSense
+    <span class="nav-logo-dot"></span>
+    GridCast
   </div>
   <div class="nav-sep"></div>
   <div class="nav-tabs">
@@ -350,8 +347,8 @@
         </div>
       </div>
       <div class="legend">
-        <div class="legend-item"><div class="legend-line" style="background:#1B4FD8"></div> XGBoost Forecast</div>
-        <div class="legend-item"><div class="legend-band" style="background:#1B4FD8;width:20px;height:10px;border-radius:3px"></div> ±5% Band</div>
+        <div class="legend-item"><div class="legend-line" style="background:#4c79b8"></div> XGBoost Forecast</div>
+        <div class="legend-item"><div class="legend-band" style="background:#4c79b8;width:20px;height:10px;border-radius:3px"></div> ±5% Band</div>
         <div style="margin-left:auto; font-size:11px; color:var(--text-tertiary)">MW · North Region</div>
       </div>
     </div>
@@ -369,16 +366,16 @@
         </div>
         <div>
           <div class="model-row">
-            <div class="model-dot" style="background:#1B4FD8"></div>
+            <div class="model-dot" style="background:#4c79b8"></div>
             <div style="flex:1">
               <div class="model-name" style="display:flex;align-items:center;gap:6px">
                 XGBoost
-                <span id="xgbHorizonBadge" style="font-size:10px;font-weight:600;background:var(--accent-light);color:var(--accent);padding:1px 6px;border-radius:10px">24h</span>
+                <span id="xgbHorizonBadge" style="font-size:10px;font-weight:600;background:var(--amber-bg);color:var(--amber);padding:1px 6px;border-radius:10px">24h</span>
               </div>
               <div class="model-type">Season-aware · Active</div>
             </div>
             <div class="model-bar-wrap">
-              <div class="model-bar-bg"><div class="model-bar-fill" id="xgbBar" style="width:0%;background:#1B4FD8"></div></div>
+              <div class="model-bar-bg"><div class="model-bar-fill" id="xgbBar" style="width:0%;background:#4c79b8"></div></div>
             </div>
             <div class="model-metric good" id="xgbMape">—</div>
           </div>
@@ -425,7 +422,7 @@
           </div>
           <div class="alert-item">
             <div class="alert-icon amber">
-              <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 1L9 9H1L5 1Z" fill="#D97706"/></svg>
+              <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 1L9 9H1L5 1Z" fill="#ffab00"/></svg>
             </div>
             <div class="alert-body">
               <div class="alert-title">Data Gap · May–Jul 2025</div>
@@ -532,7 +529,7 @@
 
   <!-- FOOTER -->
   <div style="font-size:11px;color:var(--text-tertiary);padding-bottom:8px;display:flex;gap:16px">
-    <span>⬡ GridSense v0.2 · NRLDC North Region</span>
+    <span>⬡ GridCast v0.2 · NRLDC North Region</span>
     <span id="footerDataEnd">—</span>
     <span style="margin-left:auto">Data cadence: 15 min · Model: XGBoost Season-Aware · LSTM coming</span>
   </div>
@@ -595,7 +592,7 @@
       </div>
       <div>
         <div class="model-row">
-          <div class="model-dot" style="background:#1B4FD8"></div>
+          <div class="model-dot" style="background:#4c79b8"></div>
           <div style="flex:1">
             <div class="model-name">XGBoost</div>
             <div class="model-type">Production model · Season-aware features</div>
@@ -962,15 +959,15 @@ function drawForecastChart(fc, peak, peakIdx) {
   svg.innerHTML = `
     <defs>
       <linearGradient id="bandGrad" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stop-color="#1B4FD8" stop-opacity="0.12"/>
-        <stop offset="100%" stop-color="#1B4FD8" stop-opacity="0.02"/>
+        <stop offset="0%" stop-color="#4c79b8" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#4c79b8" stop-opacity="0.04"/>
       </linearGradient>
     </defs>
     <polygon points="${upperPts} ${lowerPts}" fill="url(#bandGrad)" stroke="none"/>
     <polyline points="${linePts}"
-      fill="none" stroke="#1B4FD8" stroke-width="1.8"
+      fill="none" stroke="#4c79b8" stroke-width="2"
       stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="${scaleX(peakIdx).toFixed(1)}" cy="${scaleY(peak).toFixed(1)}" r="4" fill="#1B4FD8"/>`;
+    <circle cx="${scaleX(peakIdx).toFixed(1)}" cy="${scaleY(peak).toFixed(1)}" r="4.5" fill="#ffab00"/>`;
 
   // Peak annotation
   const ann  = document.getElementById('peakAnnotation');
@@ -995,7 +992,7 @@ function drawForecastChart(fc, peak, peakIdx) {
       tip.innerHTML     = `
         <div style="font-size:10px;margin-bottom:4px;color:#9CA3AF">${row.datetime} IST</div>
         <div class="tooltip-row">
-          <div class="tooltip-dot" style="background:#1B4FD8"></div>
+          <div class="tooltip-dot" style="background:#4c79b8"></div>
           XGBoost: ${fmt(row.load_mw)} MW
         </div>`;
     });
