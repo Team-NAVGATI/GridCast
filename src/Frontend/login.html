@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sign In — GridCast</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #050b14;
+  --bg2: #080f1c;
+  --bg3: #0c1628;
+  --cyan: #00e5ff;
+  --cyan2: #00b8d9;
+  --amber: #ffab00;
+  --green: #00e676;
+  --red: #ff1744;
+  --text: #e8edf5;
+  --muted: #6b7a96;
+  --border: rgba(0,229,255,0.12);
+  --card: rgba(12,22,40,0.85);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  overflow-x:hidden;
+  min-height:100svh;
+  display:flex;align-items:center;justify-content:center;
+}
+
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:0;
+  opacity:.5;
+}
+
+.login-wrapper{
+  position:relative;
+  z-index:1;
+  width:100%;
+  max-width:390px;
+  padding:1rem;
+}
+
+.login-container{
+  background:var(--card);
+  border:1px solid var(--border);
+  padding:1.75rem;
+  backdrop-filter:blur(20px);
+}
+
+.login-header{
+  margin-bottom:1.4rem;
+  text-align:center;
+}
+
+.login-logo{
+  font-family:'Syne',sans-serif;
+  font-weight:800;font-size:1.1rem;
+  letter-spacing:-0.02em;
+  color:var(--cyan);
+  display:flex;align-items:center;gap:.5rem;
+  justify-content:center;
+  margin-bottom:.9rem;
+}
+
+.logo-dot{
+  width:6px;height:6px;background:var(--amber);
+  border-radius:50%;animation:pulse 2s ease-in-out infinite;
+}
+
+.login-title{
+  font-family:'Syne',sans-serif;
+  font-size:1.5rem;font-weight:800;
+  letter-spacing:-0.02em;margin-bottom:.5rem;
+}
+
+.login-subtitle{
+  font-size:.88rem;color:var(--muted);line-height:1.45;
+}
+
+.form-group{
+  margin-bottom:.95rem;
+}
+
+.form-label{
+  display:block;font-family:'Space Mono',monospace;
+  font-size:.7rem;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--cyan);
+  margin-bottom:.5rem;font-weight:500;
+}
+
+.form-input{
+  width:100%;height:38px;padding:0 .9rem;
+  border:1px solid var(--border);background:rgba(0,229,255,.02);
+  color:var(--text);font-family:'DM Sans',sans-serif;
+  font-size:.86rem;transition:all .2s;
+}
+
+.form-input:focus{
+  outline:none;border-color:var(--cyan);
+  box-shadow:0 0 0 3px rgba(0,229,255,.1);
+  background:rgba(0,229,255,.05);
+}
+
+.form-input::placeholder{
+  color:var(--muted);
+}
+
+.checkbox-group{
+  display:flex;align-items:center;gap:1rem;
+  margin:1rem 0;
+}
+
+.checkbox-input{
+  width:16px;height:16px;cursor:pointer;
+  accent-color:var(--cyan);
+}
+
+.checkbox-label{
+  font-size:.8rem;color:var(--muted);cursor:pointer;
+}
+
+.forgot-password{
+  margin-left:auto;font-size:.8rem;
+  color:var(--cyan);text-decoration:none;
+  transition:color .2s;
+}
+
+.forgot-password:hover{
+  color:var(--cyan2);
+}
+
+.form-submit{
+  width:100%;height:40px;margin-top:.85rem;
+  background:var(--cyan);color:var(--bg);
+  border:none;font-family:'Syne',sans-serif;
+  font-weight:700;font-size:.9rem;cursor:pointer;
+  transition:all .2s;letter-spacing:.03em;
+  box-shadow:0 4px 12px rgba(0,229,255,.2);
+}
+
+.form-submit:hover{
+  background:var(--cyan2);transform:translateY(-2px);
+  box-shadow:0 6px 16px rgba(0,229,255,.3);
+}
+
+.alert{
+  padding:.8rem;border-radius:0;font-size:.8rem;
+  margin-bottom:1rem;display:none;
+  border-left:3px solid;
+}
+
+.alert.error{
+  background:rgba(255,23,68,.08);color:var(--red);
+  border-left-color:var(--red);
+}
+
+.alert.success{
+  background:rgba(0,230,118,.08);color:var(--green);
+  border-left-color:var(--green);
+}
+
+.divider{
+  display:flex;align-items:center;gap:1rem;
+  margin:1.1rem 0;color:var(--muted);font-size:.72rem;
+  font-family:'Space Mono',monospace;
+}
+
+.divider::before,.divider::after{
+  content:'';flex:1;height:1px;background:var(--border);
+}
+
+.sso-buttons{
+  display:grid;grid-template-columns:1fr 1fr;gap:1rem;
+  margin-bottom:1rem;
+}
+
+.sso-button{
+  height:38px;border:1px solid var(--border);
+  background:rgba(0,229,255,.02);color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:.85rem;
+  font-weight:500;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;
+}
+
+.sso-button:hover{
+  border-color:var(--cyan);background:rgba(0,229,255,.08);
+  color:var(--cyan);
+}
+
+.signup-link{
+  text-align:center;font-size:.8rem;color:var(--muted);
+}
+
+.sso-logo{
+  width:18px;height:18px;display:block;
+}
+
+.bg-scene{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  opacity:.72;
+  overflow:hidden;
+}
+
+.bg-scene svg{width:108%;height:108%;display:block;transform:translate(-4%,-4%);}
+
+.sky-haze{animation:hazeShift 18s ease-in-out infinite alternate;}
+.grid-drift{animation:gridDrift 22s linear infinite;}
+.spark{animation:twinkle 5s ease-in-out infinite;}
+.lightning-a{animation:flashA 7s ease-in-out infinite;}
+.lightning-b{animation:flashB 9s ease-in-out infinite;}
+.tower-glow{animation:towerPulse 3s ease-in-out infinite;}
+.beacon-core{animation:beaconBlink 4.8s ease-in-out infinite;}
+.beacon-ring{animation:beaconRing 4.8s ease-out infinite;transform-origin:center;}
+
+.signup-link a{
+  color:var(--cyan);text-decoration:none;font-weight:600;
+  transition:color .2s;
+}
+
+.signup-link a:hover{
+  color:var(--cyan2);
+}
+
+@media(max-width:480px){
+  .login-wrapper{
+    padding:.75rem;
+  }
+  .login-container{
+    padding:1.2rem;
+  }
+  .login-title{
+    font-size:1.25rem;
+  }
+}
+
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+@keyframes flashA{0%,86%,100%{opacity:0;}87%,89%{opacity:.7;}88%{opacity:.2;}}
+@keyframes flashB{0%,72%,100%{opacity:0;}73%,75%{opacity:.65;}74%{opacity:.1;}}
+@keyframes towerPulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+@keyframes hazeShift{0%{opacity:.45;transform:translateX(-18px);}100%{opacity:.8;transform:translateX(18px);}}
+@keyframes gridDrift{0%{transform:translateX(0);}100%{transform:translateX(36px);}}
+@keyframes twinkle{0%,100%{opacity:.2;}50%{opacity:.8;}}
+@keyframes beaconBlink{0%,100%{opacity:.3;filter:drop-shadow(0 0 0 rgba(0,229,255,0));}40%,60%{opacity:1;filter:drop-shadow(0 0 10px rgba(0,229,255,.55));}}
+@keyframes beaconRing{0%{opacity:.7;transform:scale(1);}100%{opacity:0;transform:scale(2.7);}}
+</style>
+</head>
+<body>
+
+<div class="bg-scene" aria-hidden="true">
+  <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="sceneGlow" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(0,229,255,.24)"/>
+        <stop offset="100%" stop-color="rgba(0,229,255,0)"/>
+      </linearGradient>
+      <radialGradient id="skyA" cx="25%" cy="20%" r="45%">
+        <stop offset="0%" stop-color="rgba(0,229,255,.18)"/>
+        <stop offset="100%" stop-color="rgba(0,229,255,0)"/>
+      </radialGradient>
+      <radialGradient id="skyB" cx="80%" cy="25%" r="38%">
+        <stop offset="0%" stop-color="rgba(255,171,0,.14)"/>
+        <stop offset="100%" stop-color="rgba(255,171,0,0)"/>
+      </radialGradient>
+      <linearGradient id="groundGlow" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(0,229,255,0)"/>
+        <stop offset="100%" stop-color="rgba(0,229,255,.1)"/>
+      </linearGradient>
+    </defs>
+    <rect width="1440" height="900" fill="none"/>
+    <rect class="sky-haze" x="0" y="0" width="1440" height="900" fill="url(#skyA)"/>
+    <rect class="sky-haze" x="0" y="0" width="1440" height="900" fill="url(#skyB)"/>
+    <rect x="0" y="560" width="1440" height="340" fill="url(#groundGlow)"/>
+
+    <g class="grid-drift" stroke="rgba(0,229,255,.045)" stroke-width="1">
+      <path d="M0 760 H1440"/>
+      <path d="M0 720 H1440"/>
+      <path d="M0 680 H1440"/>
+      <path d="M120 900 L340 570"/>
+      <path d="M300 900 L520 570"/>
+      <path d="M1120 900 L900 570"/>
+      <path d="M1300 900 L1080 570"/>
+    </g>
+
+    <path d="M180 760 L250 460 L320 760" stroke="rgba(0,229,255,.15)" stroke-width="2" fill="none"/>
+    <path d="M1120 760 L1190 430 L1260 760" stroke="rgba(0,229,255,.15)" stroke-width="2" fill="none"/>
+    <path d="M250 460 L1190 430" stroke="rgba(0,229,255,.09)" stroke-width="1" stroke-dasharray="6,6"/>
+
+    <circle class="tower-glow" cx="250" cy="460" r="5" fill="url(#sceneGlow)"/>
+    <circle class="tower-glow" cx="1190" cy="430" r="5" fill="url(#sceneGlow)"/>
+
+    <circle class="beacon-core" cx="250" cy="460" r="3" fill="rgba(0,229,255,.95)"/>
+    <circle class="beacon-ring" cx="250" cy="460" r="5" fill="none" stroke="rgba(0,229,255,.65)" stroke-width="1.2"/>
+    <circle class="beacon-core" cx="1190" cy="430" r="3" fill="rgba(0,229,255,.95)" style="animation-delay:.8s"/>
+    <circle class="beacon-ring" cx="1190" cy="430" r="5" fill="none" stroke="rgba(0,229,255,.65)" stroke-width="1.2" style="animation-delay:.8s"/>
+
+    <path class="lightning-a" d="M780 95 L735 180 L770 180 L730 270" stroke="rgba(255,171,0,.65)" stroke-width="2" fill="none"/>
+    <path class="lightning-b" d="M980 120 L945 195 L980 195 L940 265" stroke="rgba(255,171,0,.6)" stroke-width="2" fill="none"/>
+
+    <circle class="spark" cx="650" cy="140" r="1.5" fill="rgba(232,237,245,.7)"/>
+    <circle class="spark" cx="910" cy="180" r="1.3" fill="rgba(232,237,245,.65)" style="animation-delay:1.4s"/>
+    <circle class="spark" cx="540" cy="220" r="1.1" fill="rgba(232,237,245,.55)" style="animation-delay:2.2s"/>
+    <circle class="spark" cx="1060" cy="145" r="1.2" fill="rgba(232,237,245,.55)" style="animation-delay:.9s"/>
+  </svg>
+</div>
+
+<div class="login-wrapper">
+  <div class="login-container">
+    <div class="login-header">
+      <div class="login-logo">
+        <span class="logo-dot"></span>
+        GridCast
+      </div>
+      <h1 class="login-title">Welcome Back</h1>
+      <p class="login-subtitle">Enter your credentials to access the forecasting dashboard</p>
+    </div>
+
+    <div class="alert error" id="errorAlert">
+      Invalid email or password. Please try again.
+    </div>
+    <div class="alert success" id="successAlert">
+      Sign in successful! Redirecting...
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" placeholder="operator@grid.com" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" placeholder="Enter your password" required>
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="rememberMe" class="checkbox-input">
+        <label for="rememberMe" class="checkbox-label">Remember me</label>
+        <a href="#" class="forgot-password">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="form-submit">Sign In</button>
+    </form>
+
+    <div class="divider">Or continue with</div>
+
+    <div class="sso-buttons">
+      <button type="button" class="sso-button" aria-label="Continue with Google" title="Google">
+        <svg class="sso-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M21.8 12.2c0-.7-.1-1.3-.2-1.9H12v3.6h5.5a4.7 4.7 0 0 1-2 3.1v2.6h3.2c1.9-1.8 3.1-4.4 3.1-7.4z" fill="#4285F4"/>
+          <path d="M12 22c2.7 0 5-.9 6.7-2.5l-3.2-2.6c-.9.6-2 .9-3.5.9-2.6 0-4.8-1.8-5.6-4.1H3v2.7A10 10 0 0 0 12 22z" fill="#34A853"/>
+          <path d="M6.4 13.7A6 6 0 0 1 6 12c0-.6.1-1.2.4-1.7V7.6H3A10 10 0 0 0 2 12c0 1.6.4 3.1 1 4.4l3.4-2.7z" fill="#FBBC05"/>
+          <path d="M12 6.1c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 12 2 10 10 0 0 0 3 7.6l3.4 2.7c.8-2.3 3-4.2 5.6-4.2z" fill="#EA4335"/>
+        </svg>
+      </button>
+      <button type="button" class="sso-button" aria-label="Continue with GitHub" title="GitHub">
+        <svg class="sso-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="currentColor" d="M12 .8a11.2 11.2 0 0 0-3.5 21.8c.6.1.8-.3.8-.6v-2.2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.2-1.7-1.2-1.7-1-.7.1-.7.1-.7 1 .1 1.7 1.1 1.7 1.1 1 1.6 2.5 1.2 3.1.9.1-.7.4-1.2.7-1.5-2.6-.3-5.4-1.3-5.4-5.9 0-1.3.5-2.3 1.2-3.2-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.8.1 3.1.8.9 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.5.4.8 1.1.8 2.2V22c0 .3.2.7.8.6A11.2 11.2 0 0 0 12 .8Z"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="signup-link">
+      New to GridCast? <a href="index.html">Request access</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('loginForm');
+const errorAlert = document.getElementById('errorAlert');
+const successAlert = document.getElementById('successAlert');
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  errorAlert.style.display = 'none';
+  successAlert.style.display = 'none';
+
+  const email = form.querySelector('input[type="email"]').value;
+  const password = form.querySelector('input[type="password"]').value;
+
+  if (email && password) {
+    successAlert.style.display = 'block';
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 1500);
+  } else {
+    errorAlert.style.display = 'block';
+  }
+});
+</script>
+
+</body>
+</html>
