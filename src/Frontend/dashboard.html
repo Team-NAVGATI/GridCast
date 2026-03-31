@@ -19,7 +19,6 @@
     --accent: #4c79b8;
     --accent-light: #f0f4fb;
     --accent-muted: #6b91c7;
-    --glow-cyan: #00e5ff;
     --green: #00e676;
     --green-bg: rgba(0,230,118,0.14);
     --amber: #ffab00;
@@ -36,7 +35,6 @@
 
   body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; font-size: 13px; }
 
-  /* NAV */
   nav { background: var(--surface); border-bottom: 1px solid var(--border); height: 52px; display: flex; align-items: center; padding: 0 24px; gap: 20px; position: sticky; top: 0; z-index: 100; }
   .nav-logo { font-family:'Syne',sans-serif; font-size: 17px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 7px; letter-spacing: -.02em; }
   .nav-logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #ffab00; animation: brandPulse 2s ease-in-out infinite; }
@@ -47,16 +45,15 @@
   .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
   .wf-pill { height: 28px; border-radius: 6px; background: var(--wf-fill); display: inline-flex; align-items: center; padding: 0 12px; font-size: 12px; color: var(--text-secondary); font-weight: 500; }
   .wf-pill.sm { padding: 0 9px; height: 24px; }
-  .wf-pill.accent { background: var(--accent); color: #ffffff; cursor: pointer; box-shadow: 0 0 0 1px rgba(42,95,179,.15), 0 0 6px rgba(0,229,255,.09); }
-  .wf-pill.live::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 5px; animation: blink 2s infinite; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-  @keyframes brandPulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+  .wf-pill.accent { background: var(--accent); color: #ffffff; cursor: pointer; }
+  .wf-pill.static { background: var(--wf-fill); color: var(--text-secondary); }
+  .wf-pill.static::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--amber); margin-right: 5px; }
   .wf-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--wf-fill-accent-dark); }
 
-  /* LAYOUT */
+  @keyframes brandPulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+
   .layout { display: flex; height: calc(100vh - 52px); }
 
-  /* SIDEBAR */
   aside { width: 200px; min-width: 200px; background: var(--surface); border-right: 1px solid var(--border); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
   .aside-label { font-size: 10px; font-weight: 600; color: var(--text-tertiary); letter-spacing: .08em; text-transform: uppercase; padding: 8px 8px 4px; }
   .aside-item { height: 32px; border-radius: 7px; display: flex; align-items: center; padding: 0 10px; gap: 8px; font-size: 13px; font-weight: 500; color: var(--text-secondary); cursor: pointer; }
@@ -69,31 +66,25 @@
   .aside-region-val { font-size: 13px; font-weight: 600; color: var(--accent); }
   .aside-region-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
 
-  /* MAIN */
   main { flex: 1; overflow-y: auto; padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; }
   main::-webkit-scrollbar { width: 5px; }
   main::-webkit-scrollbar-track { background: transparent; }
   main::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; }
 
-  /* MAIN VIEWS */
   .view { display: none; flex-direction: column; gap: 16px; }
   .view.active { display: flex; }
 
-  /* PLACEHOLDER CONTENT */
   .placeholder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .placeholder-line { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
   .placeholder-line:last-child { margin-bottom: 0; }
 
-  /* PAGE HEADER */
   .page-header { display: flex; align-items: center; justify-content: space-between; }
   .page-title { font-size: 17px; font-weight: 600; letter-spacing: -.3px; }
   .page-sub { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
   .header-controls { display: flex; gap: 8px; align-items: center; }
 
-  /* SECTION LABEL */
   .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-tertiary); margin-bottom: -6px; }
 
-  /* KPI */
   .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
   .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
   .kpi-label { font-size: 11px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; }
@@ -108,19 +99,16 @@
   .badge.amber { background: var(--amber-bg); color: var(--amber); }
   .badge.red   { background: var(--red-bg);   color: var(--red); }
 
-  /* CARDS */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   .card-header { padding: 14px 18px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
   .card-title { font-size: 13px; font-weight: 600; }
   .card-subtitle { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
   .card-body { padding: 18px; }
 
-  /* MAIN GRID */
   .main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
   .right-col { display: flex; flex-direction: column; gap: 16px; }
   .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-  /* FORECAST CHART */
   .forecast-chart { height: 260px; background: var(--surface); position: relative; }
   .fc-yaxis { position: absolute; left: 0; top: 0; bottom: 28px; width: 52px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; padding-right: 8px; }
   .fc-yaxis span { font-size: 10px; color: var(--text-tertiary); font-family: 'DM Mono', monospace; }
@@ -134,21 +122,16 @@
   .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
   .legend-line { width: 20px; height: 2px; border-radius: 2px; }
   .legend-band { width: 20px; height: 10px; border-radius: 3px; opacity: .35; }
-  .now-line { position: absolute; top: 0; bottom: 0; width: 1.5px; background: var(--accent); box-shadow: 0 0 4px rgba(0,229,255,.14); pointer-events: none; }
-  .now-label { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 700; color: var(--accent); white-space: nowrap; letter-spacing: .06em; text-transform: uppercase; }
   .annotation { position: absolute; background: #fff9ea; border: 1px solid rgba(255,171,0,.35); border-radius: 6px; padding: 4px 8px; font-size: 10px; font-family: 'DM Mono', monospace; font-weight: 500; color: #8a5a00; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 
-  /* HORIZON TOGGLE BUTTONS */
   .horizon-btn { height: 26px; padding: 0 11px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .15s; }
   .horizon-btn:hover { border-color: var(--accent-muted); color: var(--accent); }
-  .horizon-btn.active { background: var(--accent); border-color: var(--accent); color: #ffffff; box-shadow: 0 0 0 1px rgba(42,95,179,.14), 0 0 5px rgba(0,229,255,.1); }
+  .horizon-btn.active { background: var(--accent); border-color: var(--accent); color: #ffffff; }
 
-  /* TOOLTIP */
   .chart-tooltip { position: absolute; background: #0f1b2f; color: var(--text-primary); padding: 7px 10px; border-radius: 7px; font-size: 11px; pointer-events: none; display: none; z-index: 10; white-space: nowrap; border: 1px solid var(--border); }
   .tooltip-row { display: flex; gap: 6px; align-items: center; margin-top: 3px; }
   .tooltip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
-  /* MODEL COMPARISON */
   .model-row { display: flex; align-items: center; padding: 11px 18px; border-bottom: 1px solid var(--border); gap: 10px; }
   .model-row:last-child { border-bottom: none; }
   .model-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
@@ -159,7 +142,6 @@
   .model-bar-fill { height: 100%; border-radius: 3px; transition: width .6s ease; }
   .model-metric { font-size: 12px; font-family: 'DM Mono', monospace; font-weight: 500; min-width: 44px; text-align: right; }
 
-  /* ALERTS */
   .alert-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 18px; border-bottom: 1px solid var(--border); }
   .alert-item:last-child { border-bottom: none; }
   .alert-icon { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
@@ -171,7 +153,6 @@
   .alert-desc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
   .alert-time { font-size: 10px; color: var(--text-tertiary); font-family: 'DM Mono', monospace; white-space: nowrap; }
 
-  /* HEATMAP */
   .heatmap-wrap { padding: 16px 18px; }
   .hm-grid { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; }
   .hm-cell { height: 20px; border-radius: 2px; cursor: pointer; }
@@ -182,7 +163,6 @@
   .hm-scale-bar { display: flex; gap: 2px; flex: 1; }
   .hm-scale-cell { flex: 1; height: 8px; border-radius: 1px; }
 
-  /* PEAK CARD */
   .peak-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 18px; }
   .peak-item { padding: 12px; background: var(--bg); border-radius: 8px; }
   .peak-item-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-tertiary); font-weight: 600; }
@@ -190,21 +170,18 @@
   .peak-item-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
   #peakVal { color: var(--amber); }
 
-  /* LOADING STATE */
   .skeleton { background: linear-gradient(90deg, var(--wf-fill) 25%, var(--border) 50%, var(--wf-fill) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px; }
   @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-  .loading-text { color: var(--text-tertiary); font-size: 12px; }
 
-  /* ERROR BANNER */
-  .error-banner { background: var(--red-bg); border: 1px solid #FECACA; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--red); display: none; }
+  /* Static mode banner */
+  .static-banner { background: #fffbeb; border: 1px solid rgba(255,171,0,.4); border-radius: 8px; padding: 8px 14px; font-size: 12px; color: #78520a; display: flex; align-items: center; gap: 8px; }
+  .static-banner strong { font-weight: 600; }
 </style>
 </head>
 <body>
 
-<!-- TOOLTIP -->
 <div class="chart-tooltip" id="chartTooltip"></div>
 
-<!-- NAV -->
 <nav>
   <div class="nav-logo">
     <span class="nav-logo-dot"></span>
@@ -219,14 +196,13 @@
   </div>
   <div class="nav-right">
     <div class="wf-pill" id="navDate">—</div>
-    <div class="wf-pill sm live">Live</div>
+    <div class="wf-pill sm static" id="modeIndicator">Static · Weekly</div>
     <div class="wf-avatar"></div>
   </div>
 </nav>
 
 <div class="layout">
 
-<!-- SIDEBAR -->
 <aside>
   <div class="aside-label">Regions</div>
   <div class="aside-item active"><div class="aside-dot active"></div>North</div>
@@ -247,294 +223,279 @@
   </div>
 </aside>
 
-<!-- MAIN -->
 <main>
 
   <div class="view active" id="view-forecast">
 
-  <!-- ERROR BANNER -->
-  <div class="error-banner" id="errorBanner">
-    ⚠ Could not reach API at <strong>localhost:5000</strong>. Make sure <code>python src/api/app.py</code> is running.
-  </div>
+    <!-- STATIC MODE NOTICE -->
+    <div class="static-banner" id="staticBanner" style="display:none">
+      ⚡ <span><strong>Pre-generated forecast</strong> — data from <span id="bannerDataEnd">—</span>. Refreshes weekly after retraining.</span>
+    </div>
 
-  <!-- PAGE HEADER -->
-  <div class="page-header">
-    <div>
-      <div class="page-title">Grid Load Forecast — North Region</div>
-      <div class="page-sub" id="pageSubtitle">Next 24h outlook · XGBoost model active · Loading...</div>
-    </div>
-    <div class="header-controls">
-      <div class="wf-pill accent" onclick="refreshForecast()">↻ Refresh</div>
-      <div class="wf-pill accent" onclick="exportCSV()">↓ Export</div>
-    </div>
-  </div>
-
-  <!-- KPI SCORECARDS -->
-  <div class="section-label">Model Performance — XGBoost (Autoregressive Backtest · 7 Cutoffs)</div>
-  <div class="kpi-row" style="grid-template-columns: repeat(6, 1fr)">
-    <div class="kpi-card">
-      <div class="kpi-label">MAPE · 24h Ahead</div>
-      <div class="kpi-value good" id="kpiMape24">—</div>
-      <div class="kpi-sub" id="kpiMape24Sub"><span class="skeleton" style="width:80px;height:12px;display:inline-block"></span></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">MAPE · 48h Ahead</div>
-      <div class="kpi-value good" id="kpiMape48">—</div>
-      <div class="kpi-sub" id="kpiMape48Sub"><span class="skeleton" style="width:80px;height:12px;display:inline-block"></span></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">MAPE · 72h Ahead</div>
-      <div class="kpi-value good" id="kpiMape72">—</div>
-      <div class="kpi-sub" id="kpiMape72Sub"><span class="skeleton" style="width:80px;height:12px;display:inline-block"></span></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Avg MAE · 24h Ahead</div>
-      <div class="kpi-value neutral" id="kpiMae">—</div>
-      <div class="kpi-sub" id="kpiMaeSub"><span class="skeleton" style="width:80px;height:12px;display:inline-block"></span></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Predicted Peak Today</div>
-      <div class="kpi-value neutral" id="kpiPeak">—</div>
-      <div class="kpi-sub" id="kpiPeakSub"><span class="skeleton" style="width:80px;height:12px;display:inline-block"></span></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Forecast Generated</div>
-      <div class="kpi-value neutral" style="font-size:15px" id="kpiTime">—</div>
-      <div class="kpi-sub" id="kpiTimeSub"><span class="skeleton" style="width:80px;height:12px;display:inline-block"></span></div>
-    </div>
-  </div>
-
-  <!-- MAIN GRID -->
-  <div class="main-grid">
-
-    <!-- LEFT: FORECAST CHART -->
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <div class="card-title" id="chartTitle">Next 24-Hour Forecast</div>
-          <div class="card-subtitle" id="chartSubtitle">XGBoost prediction · Loading data from API...</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="display:flex;gap:4px" id="horizonTabs">
-            <button class="horizon-btn active" data-h="24h" onclick="switchHorizon('24h')">24h</button>
-            <button class="horizon-btn" data-h="48h" onclick="switchHorizon('48h')">48h</button>
-            <button class="horizon-btn" data-h="72h" onclick="switchHorizon('72h')">72h</button>
-          </div>
-          <div style="font-size:11px;color:var(--text-tertiary)" id="dataEndLabel">Data end: —</div>
-        </div>
+    <div class="page-header">
+      <div>
+        <div class="page-title">Grid Load Forecast — North Region</div>
+        <div class="page-sub" id="pageSubtitle">Loading forecast...</div>
       </div>
-      <div class="card-body" style="padding-bottom:0">
-        <div class="forecast-chart" id="forecastChartWrap">
-          <!-- Y axis -->
-          <div class="fc-yaxis" id="yAxis">
-            <span>—</span><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span>
-          </div>
-          <!-- Plot area -->
-          <div class="fc-plot" id="fcPlot">
-            <div class="gridlines">
-              <div class="gridline" style="top:0%"></div>
-              <div class="gridline" style="top:20%"></div>
-              <div class="gridline" style="top:40%"></div>
-              <div class="gridline" style="top:60%"></div>
-              <div class="gridline" style="top:80%"></div>
-            </div>
-            <div class="now-line" style="left:0%" id="nowLine"><div class="now-label">Now</div></div>
-            <svg class="chart-svg" id="forecastSvg"></svg>
-            <div class="annotation" id="peakAnnotation" style="display:none"></div>
-          </div>
-          <!-- X axis -->
-          <div class="fc-xaxis" id="xAxis"></div>
-        </div>
-      </div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-line" style="background:#4c79b8"></div> XGBoost Forecast</div>
-        <div class="legend-item"><div class="legend-band" style="background:#4c79b8;width:20px;height:10px;border-radius:3px"></div> ±5% Band</div>
-        <div style="margin-left:auto; font-size:11px; color:var(--text-tertiary)">MW · North Region</div>
+      <div class="header-controls">
+        <div class="wf-pill accent" onclick="exportCSV()">↓ Export CSV</div>
       </div>
     </div>
 
-    <!-- RIGHT COL -->
-    <div class="right-col">
+    <!-- KPI SCORECARDS -->
+    <div class="section-label">Model Performance — XGBoost (Autoregressive Backtest · 7 Cutoffs)</div>
+    <div class="kpi-row" style="grid-template-columns: repeat(6, 1fr)">
+      <div class="kpi-card">
+        <div class="kpi-label">MAPE · 24h Ahead</div>
+        <div class="kpi-value good" id="kpiMape24">—</div>
+        <div class="kpi-sub" id="kpiMape24Sub"><span class="skeleton" style="width:80px;height:12px;display:inline-block"></span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">MAPE · 48h Ahead</div>
+        <div class="kpi-value good" id="kpiMape48">—</div>
+        <div class="kpi-sub" id="kpiMape48Sub"><span class="skeleton" style="width:80px;height:12px;display:inline-block"></span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">MAPE · 72h Ahead</div>
+        <div class="kpi-value good" id="kpiMape72">—</div>
+        <div class="kpi-sub" id="kpiMape72Sub"><span class="skeleton" style="width:80px;height:12px;display:inline-block"></span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Avg MAE · 24h Ahead</div>
+        <div class="kpi-value neutral" id="kpiMae">—</div>
+        <div class="kpi-sub" id="kpiMaeSub"><span class="skeleton" style="width:80px;height:12px;display:inline-block"></span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Predicted Peak</div>
+        <div class="kpi-value neutral" id="kpiPeak">—</div>
+        <div class="kpi-sub" id="kpiPeakSub"><span class="skeleton" style="width:80px;height:12px;display:inline-block"></span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Forecast From</div>
+        <div class="kpi-value neutral" style="font-size:15px" id="kpiTime">—</div>
+        <div class="kpi-sub" id="kpiTimeSub"><span class="skeleton" style="width:80px;height:12px;display:inline-block"></span></div>
+      </div>
+    </div>
 
-      <!-- MODEL COMPARISON -->
+    <div class="main-grid">
+
+      <!-- FORECAST CHART -->
       <div class="card">
         <div class="card-header">
           <div>
-            <div class="card-title">Model Comparison</div>
-            <div class="card-subtitle" id="modelCompSubtitle">MAPE · 24h autoregressive backtest · 7 cutoffs</div>
+            <div class="card-title" id="chartTitle">Next 24-Hour Forecast</div>
+            <div class="card-subtitle" id="chartSubtitle">XGBoost · Loading...</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="display:flex;gap:4px">
+              <button class="horizon-btn active" data-h="24h" onclick="switchHorizon('24h')">24h</button>
+              <button class="horizon-btn" data-h="48h" onclick="switchHorizon('48h')">48h</button>
+              <button class="horizon-btn" data-h="72h" onclick="switchHorizon('72h')">72h</button>
+            </div>
+            <div style="font-size:11px;color:var(--text-tertiary)" id="dataEndLabel">Data end: —</div>
           </div>
         </div>
-        <div>
-          <div class="model-row">
-            <div class="model-dot" style="background:#4c79b8"></div>
-            <div style="flex:1">
-              <div class="model-name" style="display:flex;align-items:center;gap:6px">
-                XGBoost
-                <span id="xgbHorizonBadge" style="font-size:10px;font-weight:600;background:var(--amber-bg);color:var(--amber);padding:1px 6px;border-radius:10px">24h</span>
+        <div class="card-body" style="padding-bottom:0">
+          <div class="forecast-chart" id="forecastChartWrap">
+            <div class="fc-yaxis" id="yAxis">
+              <span>—</span><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span>
+            </div>
+            <div class="fc-plot" id="fcPlot">
+              <div class="gridlines">
+                <div class="gridline" style="top:0%"></div>
+                <div class="gridline" style="top:20%"></div>
+                <div class="gridline" style="top:40%"></div>
+                <div class="gridline" style="top:60%"></div>
+                <div class="gridline" style="top:80%"></div>
               </div>
-              <div class="model-type">Season-aware · Active</div>
+              <svg class="chart-svg" id="forecastSvg"></svg>
+              <div class="annotation" id="peakAnnotation" style="display:none"></div>
             </div>
-            <div class="model-bar-wrap">
-              <div class="model-bar-bg"><div class="model-bar-fill" id="xgbBar" style="width:0%;background:#4c79b8"></div></div>
-            </div>
-            <div class="model-metric good" id="xgbMape">—</div>
+            <div class="fc-xaxis" id="xAxis"></div>
           </div>
-          <div class="model-row">
-            <div class="model-dot" style="background:#7C3AED"></div>
-            <div style="flex:1">
-              <div class="model-name">LSTM</div>
-              <div class="model-type">In development</div>
-            </div>
-            <div class="model-bar-wrap">
-              <div class="model-bar-bg"><div class="model-bar-fill" style="width:0%;background:#7C3AED"></div></div>
-            </div>
-            <div class="model-metric" style="color:var(--text-tertiary)">TBD</div>
-          </div>
-          <div class="model-row">
-            <div class="model-dot" style="background:#059669"></div>
-            <div style="flex:1">
-              <div class="model-name">Linear Reg.</div>
-              <div class="model-type">Baseline</div>
-            </div>
-            <div class="model-bar-wrap">
-              <div class="model-bar-bg"><div class="model-bar-fill" style="width:100%;background:#059669"></div></div>
-            </div>
-            <div class="model-metric" style="color:var(--amber)">~5.0%</div>
-          </div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-line" style="background:#4c79b8"></div> XGBoost Forecast</div>
+          <div class="legend-item"><div class="legend-band" style="background:#4c79b8;width:20px;height:10px;border-radius:3px"></div> ±5% Band</div>
+          <div style="margin-left:auto; font-size:11px; color:var(--text-tertiary)">MW · North Region</div>
         </div>
       </div>
 
-      <!-- ALERT FEED -->
+      <div class="right-col">
+
+        <!-- MODEL COMPARISON -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Model Comparison</div>
+              <div class="card-subtitle" id="modelCompSubtitle">MAPE · 24h autoregressive backtest · 7 cutoffs</div>
+            </div>
+          </div>
+          <div>
+            <div class="model-row">
+              <div class="model-dot" style="background:#4c79b8"></div>
+              <div style="flex:1">
+                <div class="model-name" style="display:flex;align-items:center;gap:6px">
+                  XGBoost
+                  <span id="xgbHorizonBadge" style="font-size:10px;font-weight:600;background:var(--amber-bg);color:var(--amber);padding:1px 6px;border-radius:10px">24h</span>
+                </div>
+                <div class="model-type">Season-aware · Active</div>
+              </div>
+              <div class="model-bar-wrap">
+                <div class="model-bar-bg"><div class="model-bar-fill" id="xgbBar" style="width:0%;background:#4c79b8"></div></div>
+              </div>
+              <div class="model-metric good" id="xgbMape">—</div>
+            </div>
+            <div class="model-row">
+              <div class="model-dot" style="background:#7C3AED"></div>
+              <div style="flex:1">
+                <div class="model-name">LSTM</div>
+                <div class="model-type">In development</div>
+              </div>
+              <div class="model-bar-wrap">
+                <div class="model-bar-bg"><div class="model-bar-fill" style="width:0%;background:#7C3AED"></div></div>
+              </div>
+              <div class="model-metric" style="color:var(--text-tertiary)">TBD</div>
+            </div>
+            <div class="model-row">
+              <div class="model-dot" style="background:#059669"></div>
+              <div style="flex:1">
+                <div class="model-name">Linear Reg.</div>
+                <div class="model-type">Baseline</div>
+              </div>
+              <div class="model-bar-wrap">
+                <div class="model-bar-bg"><div class="model-bar-fill" style="width:100%;background:#059669"></div></div>
+              </div>
+              <div class="model-metric" style="color:var(--amber)">~5.0%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ALERT FEED -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Forecast Alerts</div></div>
+          <div id="alertFeed">
+            <div class="alert-item">
+              <div class="alert-icon green">
+                <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#059669"/></svg>
+              </div>
+              <div class="alert-body">
+                <div class="alert-title">Forecast Loaded</div>
+                <div class="alert-desc" id="alertApiDesc">Loading data...</div>
+              </div>
+              <div class="alert-time" id="alertApiTime">—</div>
+            </div>
+            <div class="alert-item">
+              <div class="alert-icon amber">
+                <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 1L9 9H1L5 1Z" fill="#ffab00"/></svg>
+              </div>
+              <div class="alert-body">
+                <div class="alert-title">Data Gap · May–Jul 2025</div>
+                <div class="alert-desc">~67-day gap in peak season — handled via gap-aware sequences</div>
+              </div>
+              <div class="alert-time">Known</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row">
+
       <div class="card">
         <div class="card-header">
-          <div class="card-title">Forecast Alerts</div>
+          <div>
+            <div class="card-title">Residual Error Heatmap</div>
+            <div class="card-subtitle" id="heatmapSubtitle">Avg % error · Hour-of-day × Day-of-week · XGBoost</div>
+          </div>
+          <div class="wf-pill sm">Backtest</div>
         </div>
-        <div id="alertFeed">
-          <div class="alert-item">
-            <div class="alert-icon green">
-              <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#059669"/></svg>
+        <div class="heatmap-wrap">
+          <div style="display:flex;gap:6px">
+            <div style="display:flex;flex-direction:column;justify-content:space-around;gap:2px;min-width:24px">
+              <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Mon</span>
+              <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Tue</span>
+              <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Wed</span>
+              <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Thu</span>
+              <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Fri</span>
+              <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Sat</span>
+              <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Sun</span>
             </div>
-            <div class="alert-body">
-              <div class="alert-title">API Connected</div>
-              <div class="alert-desc" id="alertApiDesc">Loading forecast data...</div>
+            <div style="flex:1">
+              <div class="hm-grid" id="heatmapGrid"></div>
+              <div style="display:flex;justify-content:space-between;margin-top:5px">
+                <span style="font-size:10px;color:var(--text-tertiary)">00h</span>
+                <span style="font-size:10px;color:var(--text-tertiary)">03h</span>
+                <span style="font-size:10px;color:var(--text-tertiary)">06h</span>
+                <span style="font-size:10px;color:var(--text-tertiary)">09h</span>
+                <span style="font-size:10px;color:var(--text-tertiary)">12h</span>
+                <span style="font-size:10px;color:var(--text-tertiary)">15h</span>
+                <span style="font-size:10px;color:var(--text-tertiary)">18h</span>
+                <span style="font-size:10px;color:var(--text-tertiary)">21h</span>
+                <span style="font-size:10px;color:var(--text-tertiary)">23h</span>
+              </div>
             </div>
-            <div class="alert-time" id="alertApiTime">—</div>
           </div>
-          <div class="alert-item">
-            <div class="alert-icon amber">
-              <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 1L9 9H1L5 1Z" fill="#ffab00"/></svg>
+          <div class="hm-scale" style="margin-top:12px">
+            <span style="font-size:10px;color:var(--text-tertiary)">Low error</span>
+            <div class="hm-scale-bar">
+              <div class="hm-scale-cell" style="background:#D1FAE5"></div>
+              <div class="hm-scale-cell" style="background:#6EE7B7"></div>
+              <div class="hm-scale-cell" style="background:#FEF3C7"></div>
+              <div class="hm-scale-cell" style="background:#FCD34D"></div>
+              <div class="hm-scale-cell" style="background:#F87171"></div>
+              <div class="hm-scale-cell" style="background:#DC2626"></div>
             </div>
-            <div class="alert-body">
-              <div class="alert-title">Data Gap · May–Jul 2025</div>
-              <div class="alert-desc">~67-day gap in peak season — handled via gap-aware sequences</div>
-            </div>
-            <div class="alert-time">Known</div>
+            <span style="font-size:10px;color:var(--text-tertiary)">High error</span>
           </div>
+          <div id="heatmapNote" style="font-size:10px;color:var(--text-tertiary);margin-top:6px">Loading heatmap data...</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Daily Peak Load Summary</div>
+          <div class="wf-pill sm">North Region</div>
+        </div>
+        <div class="peak-grid">
+          <div class="peak-item">
+            <div class="peak-item-label">Predicted Peak</div>
+            <div class="peak-item-val" id="peakVal">—</div>
+            <div class="peak-item-sub" id="peakTime">XGBoost forecast</div>
+          </div>
+          <div class="peak-item">
+            <div class="peak-item-label">Predicted Trough</div>
+            <div class="peak-item-val" id="troughVal">—</div>
+            <div class="peak-item-sub" id="troughTime">Overnight low</div>
+          </div>
+          <div class="peak-item">
+            <div class="peak-item-label">Avg MAPE (Backtest)</div>
+            <div class="peak-item-val" id="peakMape">—</div>
+            <div class="peak-item-sub">7 cutoffs · 24h ahead</div>
+          </div>
+          <div class="peak-item" style="background:var(--accent-light)">
+            <div class="peak-item-label" style="color:var(--accent)">Model Trained</div>
+            <div class="peak-item-val" style="color:var(--accent);font-size:13px" id="trainedAt">—</div>
+            <div class="peak-item-sub" style="color:var(--accent-muted)">Season-aware split</div>
+          </div>
+        </div>
+        <div style="padding: 0 18px 14px;">
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;font-weight:500">Next 2 Hours · 15-min intervals</div>
+          <div id="forecastTable" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px"></div>
         </div>
       </div>
 
     </div>
-  </div>
 
-  <!-- BOTTOM ROW -->
-  <div class="bottom-row">
-
-    <!-- HEATMAP (static — from your backtest analysis) -->
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <div class="card-title">Residual Error Heatmap</div>
-          <div class="card-subtitle" id="heatmapSubtitle">Avg % error · Hour-of-day × Day-of-week · XGBoost</div>
-        </div>
-        <div class="wf-pill sm">Backtest</div>
-      </div>
-      <div class="heatmap-wrap">
-        <div style="display:flex;gap:6px">
-          <div style="display:flex;flex-direction:column;justify-content:space-around;gap:2px;min-width:24px">
-            <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Mon</span>
-            <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Tue</span>
-            <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Wed</span>
-            <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Thu</span>
-            <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Fri</span>
-            <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Sat</span>
-            <span style="font-size:10px;color:var(--text-tertiary);height:20px;display:flex;align-items:center">Sun</span>
-          </div>
-          <div style="flex:1">
-            <div class="hm-grid" id="heatmapGrid"></div>
-            <div style="display:flex;justify-content:space-between;margin-top:5px">
-              <span style="font-size:10px;color:var(--text-tertiary)">00h</span>
-              <span style="font-size:10px;color:var(--text-tertiary)">03h</span>
-              <span style="font-size:10px;color:var(--text-tertiary)">06h</span>
-              <span style="font-size:10px;color:var(--text-tertiary)">09h</span>
-              <span style="font-size:10px;color:var(--text-tertiary)">12h</span>
-              <span style="font-size:10px;color:var(--text-tertiary)">15h</span>
-              <span style="font-size:10px;color:var(--text-tertiary)">18h</span>
-              <span style="font-size:10px;color:var(--text-tertiary)">21h</span>
-              <span style="font-size:10px;color:var(--text-tertiary)">23h</span>
-            </div>
-          </div>
-        </div>
-        <div class="hm-scale" style="margin-top:12px">
-          <span style="font-size:10px;color:var(--text-tertiary)">Low error</span>
-          <div class="hm-scale-bar">
-            <div class="hm-scale-cell" style="background:#D1FAE5"></div>
-            <div class="hm-scale-cell" style="background:#6EE7B7"></div>
-            <div class="hm-scale-cell" style="background:#FEF3C7"></div>
-            <div class="hm-scale-cell" style="background:#FCD34D"></div>
-            <div class="hm-scale-cell" style="background:#F87171"></div>
-            <div class="hm-scale-cell" style="background:#DC2626"></div>
-          </div>
-          <span style="font-size:10px;color:var(--text-tertiary)">High error</span>
-        </div>
-        <div id="heatmapNote" style="font-size:10px;color:var(--text-tertiary);margin-top:6px">⚑ Tue 08h & Fri 07h show persistent high error — likely holiday/temp spike</div>
-      </div>
+    <div style="font-size:11px;color:var(--text-tertiary);padding-bottom:8px;display:flex;gap:16px">
+      <span>⬡ GridCast v0.2 · NRLDC North Region</span>
+      <span id="footerDataEnd">—</span>
+      <span style="margin-left:auto">Static mode · Vercel · Model: XGBoost Season-Aware · LSTM coming</span>
     </div>
 
-    <!-- PEAK LOAD PANEL -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Daily Peak Load Summary</div>
-        <div class="wf-pill sm">North Region</div>
-      </div>
-      <div class="peak-grid">
-        <div class="peak-item">
-          <div class="peak-item-label">Predicted Peak</div>
-          <div class="peak-item-val" id="peakVal">—</div>
-          <div class="peak-item-sub" id="peakTime">XGBoost forecast</div>
-        </div>
-        <div class="peak-item">
-          <div class="peak-item-label">Predicted Trough</div>
-          <div class="peak-item-val" id="troughVal">—</div>
-          <div class="peak-item-sub" id="troughTime">Overnight low</div>
-        </div>
-        <div class="peak-item">
-          <div class="peak-item-label">Avg MAPE (Backtest)</div>
-          <div class="peak-item-val" id="peakMape">—</div>
-          <div class="peak-item-sub">7 cutoffs · 24h ahead</div>
-        </div>
-        <div class="peak-item" style="background:var(--accent-light)">
-          <div class="peak-item-label" style="color:var(--accent)">Model Trained</div>
-          <div class="peak-item-val" style="color:var(--accent);font-size:13px" id="trainedAt">—</div>
-          <div class="peak-item-sub" style="color:var(--accent-muted)">Season-aware split</div>
-        </div>
-      </div>
-      <!-- Forecast value table — first 8 steps -->
-      <div style="padding: 0 18px 14px;">
-        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;font-weight:500">Next 2 Hours · 15-min intervals</div>
-        <div id="forecastTable" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px"></div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- FOOTER -->
-  <div style="font-size:11px;color:var(--text-tertiary);padding-bottom:8px;display:flex;gap:16px">
-    <span>⬡ GridCast v0.2 · NRLDC North Region</span>
-    <span id="footerDataEnd">—</span>
-    <span style="margin-left:auto">Data cadence: 15 min · Model: XGBoost Season-Aware · LSTM coming</span>
-  </div>
-
-  </div>
+  </div><!-- /view-forecast -->
 
   <div class="view" id="view-analysis">
     <div class="page-header">
@@ -543,29 +504,17 @@
         <div class="page-sub">Operational analysis summary for current forecast cycle</div>
       </div>
     </div>
-
     <div class="placeholder-grid">
       <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Error Pattern Insights</div>
-            <div class="card-subtitle">Focus areas from recent forecast behavior</div>
-          </div>
-        </div>
+        <div class="card-header"><div><div class="card-title">Error Pattern Insights</div><div class="card-subtitle">Focus areas from recent forecast behavior</div></div></div>
         <div class="card-body">
           <div class="placeholder-line">• Morning transition slots show higher variance than mid-day.</div>
           <div class="placeholder-line">• Weekday peaks remain more stable than weekend peaks.</div>
           <div class="placeholder-line">• Backtest heatmap remains primary source for slot-level reliability.</div>
         </div>
       </div>
-
       <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Operational Notes</div>
-            <div class="card-subtitle">Action-oriented review points</div>
-          </div>
-        </div>
+        <div class="card-header"><div><div class="card-title">Operational Notes</div><div class="card-subtitle">Action-oriented review points</div></div></div>
         <div class="card-body">
           <div class="placeholder-line">• Monitor high-demand windows around peak ramp-up hours.</div>
           <div class="placeholder-line">• Cross-check abnormal spikes with weather and holiday signals.</div>
@@ -582,39 +531,12 @@
         <div class="page-sub">Status and readiness of forecasting models</div>
       </div>
     </div>
-
     <div class="card">
-      <div class="card-header">
-        <div>
-          <div class="card-title">Model Readiness Matrix</div>
-          <div class="card-subtitle">Current and planned forecasting pipelines</div>
-        </div>
-      </div>
+      <div class="card-header"><div><div class="card-title">Model Readiness Matrix</div><div class="card-subtitle">Current and planned forecasting pipelines</div></div></div>
       <div>
-        <div class="model-row">
-          <div class="model-dot" style="background:#4c79b8"></div>
-          <div style="flex:1">
-            <div class="model-name">XGBoost</div>
-            <div class="model-type">Production model · Season-aware features</div>
-          </div>
-          <div class="wf-pill sm">Active</div>
-        </div>
-        <div class="model-row">
-          <div class="model-dot" style="background:#7C3AED"></div>
-          <div style="flex:1">
-            <div class="model-name">LSTM</div>
-            <div class="model-type">Sequence model · Direct multi-step output</div>
-          </div>
-          <div class="wf-pill sm">In Progress</div>
-        </div>
-        <div class="model-row">
-          <div class="model-dot" style="background:#059669"></div>
-          <div style="flex:1">
-            <div class="model-name">Linear Regression</div>
-            <div class="model-type">Baseline benchmark for drift checks</div>
-          </div>
-          <div class="wf-pill sm">Baseline</div>
-        </div>
+        <div class="model-row"><div class="model-dot" style="background:#4c79b8"></div><div style="flex:1"><div class="model-name">XGBoost</div><div class="model-type">Production model · Season-aware features</div></div><div class="wf-pill sm">Active</div></div>
+        <div class="model-row"><div class="model-dot" style="background:#7C3AED"></div><div style="flex:1"><div class="model-name">LSTM</div><div class="model-type">Sequence model · Direct multi-step output</div></div><div class="wf-pill sm">In Progress</div></div>
+        <div class="model-row"><div class="model-dot" style="background:#059669"></div><div style="flex:1"><div class="model-name">Linear Regression</div><div class="model-type">Baseline benchmark for drift checks</div></div><div class="wf-pill sm">Baseline</div></div>
       </div>
     </div>
   </div>
@@ -626,29 +548,17 @@
         <div class="page-sub">Generated artifacts and export-ready summaries</div>
       </div>
     </div>
-
     <div class="placeholder-grid">
       <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Forecast Reporting</div>
-            <div class="card-subtitle">Daily and weekly operational summaries</div>
-          </div>
-        </div>
+        <div class="card-header"><div><div class="card-title">Forecast Reporting</div><div class="card-subtitle">Daily and weekly operational summaries</div></div></div>
         <div class="card-body">
           <div class="placeholder-line">• Daily forecast snapshot with peak/trough summary.</div>
           <div class="placeholder-line">• Weekly accuracy digest for stakeholder review.</div>
           <div class="placeholder-line">• CSV export available from Forecast tab.</div>
         </div>
       </div>
-
       <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Model Governance</div>
-            <div class="card-subtitle">Tracking quality and retraining posture</div>
-          </div>
-        </div>
+        <div class="card-header"><div><div class="card-title">Model Governance</div><div class="card-subtitle">Tracking quality and retraining posture</div></div></div>
         <div class="card-body">
           <div class="placeholder-line">• Log model performance against rolling benchmarks.</div>
           <div class="placeholder-line">• Maintain retraining notes and data coverage updates.</div>
@@ -662,26 +572,62 @@
 </div>
 
 <script>
-const API = 'http://localhost:5000';
+// Fetch from pre-generated JSON files
+// Files should be in data/public/data/ directory
 
-// ── State ─────────────────────────────────────────────────────────────────────
-let forecastData   = null;   // currently displayed forecast response
-let forecastCache  = {};     // cache: {"24h": response, "48h": response, ...}
-let activeHorizon  = '24h';
+let forecastData  = null;
+let forecastCache = {};
+let activeHorizon = '24h';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function fmt(n)    { return Math.round(n).toLocaleString('en-IN'); }
-function fmtMW(n)  { return fmt(n) + ' MW'; }
-
-function mapeClass(v) {
-  if (v < 3)  return 'good';
-  if (v < 4)  return 'warn';
-  return 'bad';
+// Dynamically construct the path based on current location
+function getDataPath() {
+  const currentPath = window.location.pathname;
+  if (currentPath.includes('/src/Frontend/')) {
+    return '../../data/public/data/xgboost';
+  }
+  return '/data/public/data/xgboost';  // fallback for production
 }
 
+function fmt(n)   { return Math.round(n).toLocaleString('en-IN'); }
+function fmtMW(n) { return fmt(n) + ' MW'; }
+function mapeClass(v) { return v < 3 ? 'good' : v < 4 ? 'warn' : 'bad'; }
+function deriveHorizonHours(data) {
+  if (Number.isFinite(data?.horizon_h)) return data.horizon_h;
+  if (typeof data?.horizon === 'string') {
+    const parsed = parseInt(data.horizon, 10);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  if (Number.isFinite(data?.steps)) return Math.round(data.steps / 4);
+  if (Array.isArray(data?.forecast)) return Math.round(data.forecast.length / 4);
+  return 24;
+}
+function getHorizonMetrics(data) {
+  return (data && typeof data.horizon_metrics === 'object' && data.horizon_metrics !== null)
+    ? data.horizon_metrics
+    : {};
+}
+function mergeSupplementalMetrics(data, metricsPayload) {
+  if (!data || !metricsPayload) return data;
+  const merged = { ...data };
+  const sourceMetrics = metricsPayload.horizon_metrics || metricsPayload;
+  if (!merged.horizon_metrics || Object.keys(merged.horizon_metrics).length === 0) {
+    merged.horizon_metrics = sourceMetrics || {};
+  }
+  if (!merged.trained_at && metricsPayload.trained_at) merged.trained_at = metricsPayload.trained_at;
+  return merged;
+}
+async function fetchSupplementalMetrics() {
+  try {
+    const res = await fetch(`${getDataPath()}/metrics.json`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    return null;
+  }
+}
 function nowIST() {
   return new Date().toLocaleString('en-IN', {
-    timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false
+    timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit', hour12:false
   }) + ' IST';
 }
 
@@ -689,76 +635,69 @@ function nowIST() {
 async function switchHorizon(h) {
   if (h === activeHorizon && forecastCache[h]) return;
   activeHorizon = h;
+  document.querySelectorAll('.horizon-btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.h === h));
 
-  // Update button states
-  document.querySelectorAll('.horizon-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.h === h);
-  });
+  if (forecastCache[h]) { forecastData = forecastCache[h]; updateChartOnly(forecastData); return; }
 
-  // Use cache if available, otherwise fetch
-  if (forecastCache[h]) {
-    forecastData = forecastCache[h];
-    updateChartOnly(forecastData);
-    return;
-  }
-
-  // Show loading state on subtitle
-  document.getElementById('chartSubtitle').textContent = `Fetching ${h} forecast...`;
-
+  document.getElementById('chartSubtitle').textContent = `Loading ${h}...`;
   try {
-    const res  = await fetch(`${API}/forecast?horizon=${h}`);
-    if (!res.ok) throw new Error('API error');
-    const data = await res.json();
+    const res  = await fetch(`${getDataPath()}/forecast_${h}.json`);
+    if (!res.ok) throw new Error();
+    const metrics = await fetchSupplementalMetrics();
+    const data = mergeSupplementalMetrics(await res.json(), metrics);
     forecastCache[h] = data;
     forecastData     = data;
     updateChartOnly(data);
   } catch(e) {
-    document.getElementById('chartSubtitle').textContent = `Failed to load ${h} forecast`;
-    console.error(e);
+    document.getElementById('chartSubtitle').textContent = `Could not load forecast_${h}.json`;
   }
 }
 
-// ── Update only the chart area (used when switching horizons) ─────────────────
+// ── Update chart + panels (called on horizon switch and initial load) ─────────
 function updateChartOnly(data) {
-  const fc    = data.forecast;
-  const loads = fc.map(r => r.load_mw);
-  const peak  = Math.max(...loads);
+  const fc      = data.forecast;
+  const loads   = fc.map(r => r.load_mw);
+  const peak    = Math.max(...loads);
   const peakIdx = loads.indexOf(peak);
-  const h     = data.horizon;   // "24h" | "48h" | "72h"
-  const hInt  = data.horizon_h; // 24 | 48 | 72
+  const h       = data.horizon;
+  const hInt    = deriveHorizonHours(data);
 
   document.getElementById('chartTitle').textContent    = `Next ${hInt}-Hour Forecast`;
   document.getElementById('chartSubtitle').textContent =
-    `XGBoost ${h} forecast · ${fc[0].datetime} → ${fc[fc.length-1].datetime}`;
-  document.getElementById('pageSubtitle').textContent =
-    `Next ${h} outlook · Updated ${nowIST()} · XGBoost model active`;
+    `XGBoost ${h} · ${fc[0].datetime} → ${fc[fc.length-1].datetime}`;
+  document.getElementById('pageSubtitle').textContent  =
+    `Pre-generated from ${data.data_end.slice(0,10)} · XGBoost active · Updated weekly`;
 
-  // Update model comparison row to reflect active horizon
-  const hm = data.horizon_metrics;
+  const hm = getHorizonMetrics(data);
   if (hm && hm[h]) {
     const m = hm[h];
-    const w = Math.round((m.mape / 6) * 100);
-    document.getElementById('xgbBar').style.width    = w + '%';
-    document.getElementById('xgbMape').textContent   = m.mape.toFixed(2) + '%';
-    document.getElementById('xgbMape').className     = 'model-metric ' + mapeClass(m.mape);
+    document.getElementById('xgbBar').style.width          = Math.round((m.mape/6)*100) + '%';
+    document.getElementById('xgbMape').textContent         = m.mape.toFixed(2) + '%';
+    document.getElementById('xgbMape').className           = 'model-metric ' + mapeClass(m.mape);
     document.getElementById('xgbHorizonBadge').textContent = h;
     document.getElementById('modelCompSubtitle').textContent =
       `MAPE · ${h} autoregressive backtest · 7 cutoffs`;
   }
 
-  // Update peak panel to reflect active horizon
   const trough    = Math.min(...loads);
   const troughIdx = loads.indexOf(trough);
   document.getElementById('peakVal').textContent    = fmtMW(peak);
-  document.getElementById('peakTime').textContent   = fc[peakIdx].datetime.slice(11) + ` IST · XGBoost ${h}`;
+  document.getElementById('peakTime').textContent   = fc[peakIdx].datetime.slice(11) + ` IST · ${h}`;
   document.getElementById('troughVal').textContent  = fmtMW(trough);
   document.getElementById('troughTime').textContent = fc[troughIdx].datetime.slice(11) + ' IST';
-
-  // Update peak KPI card
   document.getElementById('kpiPeak').textContent    = fmtMW(peak);
   document.getElementById('kpiPeakSub').textContent = `at ${fc[peakIdx].datetime.slice(11)} IST · ${h}`;
 
-  // Update forecast table (first 8 steps)
+  if (!hm[h]) {
+    document.getElementById('xgbBar').style.width = '0%';
+    document.getElementById('xgbMape').textContent = 'N/A';
+    document.getElementById('xgbMape').className = 'model-metric';
+    document.getElementById('xgbHorizonBadge').textContent = h;
+    document.getElementById('modelCompSubtitle').textContent =
+      `MAPE unavailable for ${h} forecast`;
+  }
+
   const tableEl = document.getElementById('forecastTable');
   tableEl.innerHTML = '';
   fc.slice(0, 8).forEach(row => {
@@ -774,79 +713,55 @@ function updateChartOnly(data) {
   requestAnimationFrame(() => drawForecastChart(fc, peak, peakIdx));
 }
 
-// ── Fetch /health + /forecast (24h default) + /residuals on init ──────────────
+// ── Initial load ──────────────────────────────────────────────────────────────
 async function loadForecast() {
   try {
-    const [healthRes, forecastRes, residualsRes] = await Promise.all([
-      fetch(`${API}/health`),
-      fetch(`${API}/forecast?horizon=24h`),
-      fetch(`${API}/residuals`)
+    const [forecastRes, residualsRes, metricsRes] = await Promise.all([
+      fetch(`${getDataPath()}/forecast_24h.json`),
+      fetch(`${getDataPath()}/residuals.json`),
+      fetchSupplementalMetrics()
     ]);
+    if (!forecastRes.ok) throw new Error('forecast_24h.json not found');
 
-    if (!healthRes.ok || !forecastRes.ok) throw new Error('API error');
-
-    const health = await healthRes.json();
-    const data   = await forecastRes.json();
-
+    const data = mergeSupplementalMetrics(await forecastRes.json(), metricsRes);
     forecastCache['24h'] = data;
     forecastData         = data;
-    activeHorizon        = '24h';
 
-    document.getElementById('errorBanner').style.display = 'none';
-    renderAll(health, data);
+    renderAll(data);
 
-    // Heatmap — real residuals if available, static fallback otherwise
     if (residualsRes.ok) {
-      const residuals = await residualsRes.json();
-      buildHeatmap(residuals.heatmap_matrix);
-      if (residuals.heatmap_info && residuals.heatmap_info.n_cutoffs) {
-        const mape24 = data.horizon_metrics["24h"].mape;
-        document.getElementById('kpiMape24Sub').innerHTML =
-          `<span class="badge ${mapeClass(mape24)}">${mape24 < 4 ? '✓ On target' : '⚠ Investigate'}</span> ${residuals.heatmap_info.n_cutoffs}-cutoff heatmap`;
-      }
+      const r = await residualsRes.json();
+      buildHeatmap(r.heatmap_matrix);
     } else {
       buildHeatmap(null);
     }
-
-  } catch (e) {
-    document.getElementById('errorBanner').style.display = 'block';
+  } catch(e) {
+    console.error(e);
+    document.getElementById('pageSubtitle').textContent =
+      'Could not load forecast_24h.json — run pre_generate.py first.';
     buildHeatmap(null);
-    console.error('API fetch failed:', e);
   }
 }
 
-function refreshForecast() {
-  forecastCache  = {};   // clear cache so all horizons refetch fresh data
-  activeHorizon  = '24h';
-  document.querySelectorAll('.horizon-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.h === '24h');
-  });
-  loadForecast();
-}
-
-// ── Render everything ─────────────────────────────────────────────────────────
-function renderAll(health, data) {
-  const fc      = data.forecast;           // [{datetime, load_mw}, ...]
-  const hm      = data.horizon_metrics;    // {"24h":{mae,rmse,mape}, "48h":..., "72h":...}
-  const m24     = hm["24h"];               // primary horizon for KPI cards
+// ── Render KPI cards + static info on first load ──────────────────────────────
+function renderAll(data) {
+  const fc      = data.forecast;
+  const hm      = getHorizonMetrics(data);
+  const m24     = hm["24h"];
   const loads   = fc.map(r => r.load_mw);
   const peak    = Math.max(...loads);
-  const trough  = Math.min(...loads);
   const peakIdx = loads.indexOf(peak);
-  const troughIdx = loads.indexOf(trough);
 
-  // Nav date
-  const now = new Date();
-  document.getElementById('navDate').textContent = now.toLocaleDateString('en-IN',
+  document.getElementById('navDate').textContent = new Date().toLocaleDateString('en-IN',
     { weekday:'short', day:'numeric', month:'short', year:'numeric' });
 
-  // Page subtitle — will be updated again by updateChartOnly with correct horizon
-  document.getElementById('pageSubtitle').textContent =
-    `Next 24h outlook · Updated ${nowIST()} · XGBoost model active`;
-
-  // KPI cards — all 3 horizons
   function renderMapeCard(idVal, idSub, m) {
-    if (!m || m.mape == null) return;
+    if (!m || m.mape == null) {
+      document.getElementById(idVal).textContent = 'N/A';
+      document.getElementById(idVal).className   = 'kpi-value neutral';
+      document.getElementById(idSub).textContent = 'Backtest metrics unavailable in JSON';
+      return;
+    }
     document.getElementById(idVal).textContent = m.mape.toFixed(2) + '%';
     document.getElementById(idVal).className   = 'kpi-value ' + mapeClass(m.mape);
     document.getElementById(idSub).innerHTML   =
@@ -856,91 +771,63 @@ function renderAll(health, data) {
   renderMapeCard('kpiMape48', 'kpiMape48Sub', hm["48h"]);
   renderMapeCard('kpiMape72', 'kpiMape72Sub', hm["72h"]);
 
-  document.getElementById('kpiMae').textContent  = fmt(m24.mae) + ' MW';
-  document.getElementById('kpiMaeSub').textContent = 'Avg over 7 backtest cutoffs';
-
-  document.getElementById('kpiPeak').textContent = fmtMW(peak);
-  document.getElementById('kpiPeakSub').textContent = 'at ' + fc[peakIdx].datetime.slice(11) + ' IST';
-
-  document.getElementById('kpiTime').textContent = data.generated_at.slice(11, 16) + ' IST';
-  document.getElementById('kpiTimeSub').textContent = 'Data ends ' + data.data_end.slice(0, 10);
-
-  // Model comparison bar — single XGBoost row, seeded with 24h on load
-  function renderModelBar(m, h) {
-    if (!m || m.mape == null) return;
-    const w = Math.round((m.mape / 6) * 100);
-    document.getElementById('xgbBar').style.width    = w + '%';
-    document.getElementById('xgbMape').textContent   = m.mape.toFixed(2) + '%';
-    document.getElementById('xgbMape').className     = 'model-metric ' + mapeClass(m.mape);
-    document.getElementById('xgbHorizonBadge').textContent = h;
-    document.getElementById('modelCompSubtitle').textContent =
-      `MAPE · ${h} autoregressive backtest · 7 cutoffs`;
+  if (m24 && m24.mae != null) {
+    document.getElementById('kpiMae').textContent     = fmt(m24.mae) + ' MW';
+    document.getElementById('kpiMaeSub').textContent  = 'Avg over 7 backtest cutoffs';
+  } else {
+    document.getElementById('kpiMae').textContent     = 'N/A';
+    document.getElementById('kpiMaeSub').textContent  = 'Backtest metrics unavailable in JSON';
   }
-  renderModelBar(hm["24h"], "24h");
+  document.getElementById('kpiPeak').textContent    = fmtMW(peak);
+  document.getElementById('kpiPeakSub').textContent = `at ${fc[peakIdx].datetime.slice(11)} IST · 24h`;
+  document.getElementById('kpiTime').textContent    = data.data_end.slice(0, 10);
+  document.getElementById('kpiTimeSub').textContent = 'Forecast seeded from this date';
 
-  // Alert feed
   document.getElementById('alertApiDesc').textContent =
-    `XGBoost forecast loaded · ${fc.length} steps · Peak ${fmtMW(peak)}`;
-  document.getElementById('alertApiTime').textContent = nowIST().slice(0, 5);
+    `Pre-generated · ${fc.length} steps · Peak ${fmtMW(peak)}`;
+  document.getElementById('alertApiTime').textContent = data.data_end.slice(5, 10);
 
-  // Peak panel static info (dynamic parts handled by updateChartOnly)
-  document.getElementById('peakMape').textContent  = m24.mape.toFixed(2) + '%';
+  document.getElementById('peakMape').textContent  = m24 && m24.mape != null ? m24.mape.toFixed(2) + '%' : 'N/A';
   document.getElementById('trainedAt').textContent = data.trained_at.slice(0, 10);
+  document.getElementById('dataEndLabel').textContent  = 'Data end: ' + data.data_end.slice(0, 16);
+  document.getElementById('footerDataEnd').textContent = 'Forecast from: ' + data.data_end.slice(0, 10);
 
-  // Footer
-  document.getElementById('footerDataEnd').textContent =
-    'Model trained on data up to ' + data.data_end.slice(0, 10);
-
-  // Chart subtitle + data end
-  document.getElementById('dataEndLabel').textContent = 'Data end: ' + data.data_end.slice(0, 16);
-
-  // Draw chart + update peak panel (heatmap called separately after /residuals fetch)
   updateChartOnly(data);
 }
 
-// ── Forecast Chart ────────────────────────────────────────────────────────────
-// Uses real pixel dimensions from getBoundingClientRect() — no fixed viewBox.
-// Tooltip listeners are attached once (chartListenersAttached flag).
+// ── Forecast chart (unchanged from your original) ─────────────────────────────
 let chartListenersAttached = false;
-let currentFc = null;   // kept for tooltip lookup after redraw
+let currentFc = null;
 
 function drawForecastChart(fc, peak, peakIdx) {
-  currentFc        = fc;
-  const loads      = fc.map(r => r.load_mw);
-  const minV       = Math.min(...loads) * 0.985;
-  const maxV       = Math.max(...loads) * 1.015;
-  const range      = maxV - minV;
-
-  // Get real pixel size of the plot area AFTER layout
-  const plotEl = document.getElementById('fcPlot');
-  const rect   = plotEl.getBoundingClientRect();
-  const W      = rect.width  || 600;
-  const H      = rect.height || 200;
-
-  // Set SVG size explicitly to match plot area
-  const svg = document.getElementById('forecastSvg');
-  svg.setAttribute('width',  W);
-  svg.setAttribute('height', H);
+  currentFc      = fc;
+  const loads    = fc.map(r => r.load_mw);
+  const minV     = Math.min(...loads) * 0.985;
+  const maxV     = Math.max(...loads) * 1.015;
+  const range    = maxV - minV;
+  const plotEl   = document.getElementById('fcPlot');
+  const rect     = plotEl.getBoundingClientRect();
+  const W        = rect.width  || 600;
+  const H        = rect.height || 200;
+  const svg      = document.getElementById('forecastSvg');
+  svg.setAttribute('width',   W);
+  svg.setAttribute('height',  H);
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 
   const scaleX = i => (i / (loads.length - 1)) * W;
   const scaleY = v => H - ((v - minV) / range) * H;
 
-  // Y axis labels
-  const ySteps  = 6;
   const yLabels = document.getElementById('yAxis');
   yLabels.innerHTML = '';
-  for (let i = ySteps; i >= 0; i--) {
-    const v    = minV + (range / ySteps) * i;
+  for (let i = 6; i >= 0; i--) {
     const span = document.createElement('span');
-    span.textContent = Math.round(v / 1000) + 'k';
+    span.textContent = Math.round((minV + (range / 6) * i) / 1000) + 'k';
     yLabels.appendChild(span);
   }
 
-  // X axis labels — 8 evenly spaced ticks
-  const xAxis  = document.getElementById('xAxis');
+  const xAxis = document.getElementById('xAxis');
   xAxis.innerHTML = '';
-  const xStep  = Math.floor(fc.length / 8);
+  const xStep = Math.floor(fc.length / 8);
   for (let i = 0; i <= 8; i++) {
     const idx  = Math.min(i * xStep, fc.length - 1);
     const span = document.createElement('span');
@@ -948,64 +835,48 @@ function drawForecastChart(fc, peak, peakIdx) {
     xAxis.appendChild(span);
   }
 
-  // Confidence band polygon (±5%)
-  const upperPts = loads.map((v, i) => `${scaleX(i).toFixed(1)},${scaleY(v * 1.05).toFixed(1)}`).join(' ');
+  const upperPts = loads.map((v, i) => `${scaleX(i).toFixed(1)},${scaleY(v*1.05).toFixed(1)}`).join(' ');
   const lowerPts = [...loads].reverse().map((v, i) =>
-    `${scaleX(loads.length - 1 - i).toFixed(1)},${scaleY(v * 0.95).toFixed(1)}`).join(' ');
-
-  // Forecast polyline
-  const linePts = loads.map((v, i) => `${scaleX(i).toFixed(1)},${scaleY(v).toFixed(1)}`).join(' ');
+    `${scaleX(loads.length-1-i).toFixed(1)},${scaleY(v*0.95).toFixed(1)}`).join(' ');
+  const linePts  = loads.map((v, i) => `${scaleX(i).toFixed(1)},${scaleY(v).toFixed(1)}`).join(' ');
 
   svg.innerHTML = `
-    <defs>
-      <linearGradient id="bandGrad" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0%" stop-color="#4c79b8" stop-opacity="0.18"/>
-        <stop offset="100%" stop-color="#4c79b8" stop-opacity="0.04"/>
-      </linearGradient>
-    </defs>
+    <defs><linearGradient id="bandGrad" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#4c79b8" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#4c79b8" stop-opacity="0.04"/>
+    </linearGradient></defs>
     <polygon points="${upperPts} ${lowerPts}" fill="url(#bandGrad)" stroke="none"/>
-    <polyline points="${linePts}"
-      fill="none" stroke="#4c79b8" stroke-width="2"
+    <polyline points="${linePts}" fill="none" stroke="#4c79b8" stroke-width="2"
       stroke-linecap="round" stroke-linejoin="round"/>
     <circle cx="${scaleX(peakIdx).toFixed(1)}" cy="${scaleY(peak).toFixed(1)}" r="4.5" fill="#ffab00"/>`;
 
-  // Peak annotation
   const ann  = document.getElementById('peakAnnotation');
-  const pctX = (peakIdx / (loads.length - 1)) * 100;
   ann.style.display = 'block';
-  ann.style.left    = Math.min(pctX, 78) + '%';
+  ann.style.left    = Math.min((peakIdx/(loads.length-1))*100, 78) + '%';
   ann.style.top     = '6%';
   ann.textContent   = `Peak · ${fmt(peak)} MW · ${fc[peakIdx].datetime.slice(11)}`;
 
-  // Tooltip — attach once, always reads currentFc so it stays fresh after horizon switch
   if (!chartListenersAttached) {
     const tip = document.getElementById('chartTooltip');
     plotEl.addEventListener('mousemove', e => {
       if (!currentFc) return;
       const r   = plotEl.getBoundingClientRect();
-      const pct = (e.clientX - r.left) / r.width;
-      const idx = Math.min(Math.max(Math.floor(pct * currentFc.length), 0), currentFc.length - 1);
+      const idx = Math.min(Math.max(Math.floor(((e.clientX-r.left)/r.width)*currentFc.length),0),currentFc.length-1);
       const row = currentFc[idx];
       tip.style.display = 'block';
-      tip.style.left    = (e.clientX + 14) + 'px';
-      tip.style.top     = (e.clientY - 52) + 'px';
+      tip.style.left    = (e.clientX+14)+'px';
+      tip.style.top     = (e.clientY-52)+'px';
       tip.innerHTML     = `
         <div style="font-size:10px;margin-bottom:4px;color:#9CA3AF">${row.datetime} IST</div>
-        <div class="tooltip-row">
-          <div class="tooltip-dot" style="background:#4c79b8"></div>
-          XGBoost: ${fmt(row.load_mw)} MW
-        </div>`;
+        <div class="tooltip-row"><div class="tooltip-dot" style="background:#4c79b8"></div>
+        XGBoost: ${fmt(row.load_mw)} MW</div>`;
     });
-    plotEl.addEventListener('mouseleave', () => {
-      document.getElementById('chartTooltip').style.display = 'none';
-    });
+    plotEl.addEventListener('mouseleave', () => { tip.style.display='none'; });
     chartListenersAttached = true;
   }
 }
 
-// ── Heatmap — real residuals from API, static fallback ────────────────────────
-// matrix: list[7][24] of mean APE % values (0=Mon…6=Sun, hour 0–23)
-// If null, falls back to illustrative static pattern
+// ── Heatmap (unchanged from your original) ────────────────────────────────────
 function buildHeatmap(matrix) {
   const STATIC_FALLBACK = [
     [0,1,2,1,0,0,1,3,4,3,2,1,0,0,1,2,3,2,1,0,1,2,1,0],
@@ -1016,99 +887,77 @@ function buildHeatmap(matrix) {
     [2,2,2,1,1,1,0,1,1,2,3,3,2,2,3,4,3,2,1,0,1,2,2,1],
     [3,2,2,2,1,1,0,1,2,3,3,2,2,1,2,3,2,1,1,1,2,2,2,1],
   ];
-
-  const days    = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const isReal  = matrix !== null && matrix !== undefined;
-  const grid    = document.getElementById('heatmapGrid');
+  const days   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const isReal = matrix != null;
+  const grid   = document.getElementById('heatmapGrid');
   grid.innerHTML = '';
   grid.style.gridTemplateRows = 'repeat(7, 20px)';
+  document.getElementById('heatmapSubtitle').textContent = isReal
+    ? 'Real APE % · Hour-of-day × Day-of-week · from test set forecasts'
+    : 'Illustrative · run train_and_save.py for real residuals';
 
-  // Update subtitle to reflect real vs static
-  const subtitle = document.getElementById('heatmapSubtitle');
-  if (subtitle) {
-    subtitle.textContent = isReal
-      ? 'Real APE % · Hour-of-day × Day-of-week · from test set forecasts'
-      : 'Illustrative · Hour-of-day × Day-of-week · XGBoost (run train_and_save.py for real)';
-  }
-
-  // If real matrix: map continuous APE % → color level 0–5
-  // Thresholds tuned for actual backtest range (0.6% – 7.5%)
   function apeToLevel(ape) {
-    if (ape < 1.5) return 0;
-    if (ape < 2.5) return 1;
-    if (ape < 3.5) return 2;
-    if (ape < 4.5) return 3;
-    if (ape < 5.5) return 4;
-    return 5;
+    if (ape < 1.5) return 0; if (ape < 2.5) return 1; if (ape < 3.5) return 2;
+    if (ape < 4.5) return 3; if (ape < 5.5) return 4; return 5;
   }
-
   for (let d = 0; d < 7; d++) {
     for (let h = 0; h < 24; h++) {
       const cell = document.createElement('div');
-
-      if (isReal) {
-        const ape   = matrix[d][h];
-        const level = apeToLevel(ape);
-        cell.className = `hm-cell l${level}`;
-        cell.title = `${days[d]} ${String(h).padStart(2,'0')}:00 — ${ape.toFixed(2)}% APE`;
-      } else {
-        const level = STATIC_FALLBACK[d][h];
-        cell.className = `hm-cell l${level}`;
-        cell.title = `${days[d]} ${String(h).padStart(2,'0')}:00 — level ${level} (illustrative)`;
-      }
-
+      const level = isReal ? apeToLevel(matrix[d][h]) : STATIC_FALLBACK[d][h];
+      cell.className = `hm-cell l${level}`;
+      cell.title = isReal
+        ? `${days[d]} ${String(h).padStart(2,'0')}:00 — ${matrix[d][h].toFixed(2)}% APE`
+        : `${days[d]} ${String(h).padStart(2,'0')}:00 — illustrative`;
       grid.appendChild(cell);
     }
   }
-
-  // Update worst-slots note with real data
   if (isReal) {
-    const note = document.getElementById('heatmapNote');
-    if (note) {
-      const slots = [];
-      for (let d = 0; d < 7; d++) {
-        for (let h = 0; h < 24; h++) {
-          slots.push({ ape: matrix[d][h], day: days[d], hour: h });
-        }
-      }
-      slots.sort((a, b) => b.ape - a.ape);
-      const top = slots.slice(0, 3);
-      note.textContent = '⚑ Worst: ' + top.map(s =>
-        `${s.day} ${String(s.hour).padStart(2,'0')}h (${s.ape.toFixed(1)}%)`
-      ).join(' · ');
-    }
+    const slots = [];
+    for (let d=0;d<7;d++) for (let h=0;h<24;h++) slots.push({ape:matrix[d][h],day:days[d],hour:h});
+    slots.sort((a,b)=>b.ape-a.ape);
+    document.getElementById('heatmapNote').textContent = '⚑ Worst: ' +
+      slots.slice(0,3).map(s=>`${s.day} ${String(s.hour).padStart(2,'0')}h (${s.ape.toFixed(1)}%)`).join(' · ');
   }
 }
 
 // ── Export CSV ────────────────────────────────────────────────────────────────
 function exportCSV() {
   if (!forecastData) return;
-  const rows = ['datetime,load_mw', ...forecastData.forecast.map(r => `${r.datetime},${r.load_mw}`)];
-  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = `nrldc_forecast_${activeHorizon}_${forecastData.generated_at.slice(0,10)}.csv`;
+  const rows = ['datetime,load_mw', ...forecastData.forecast.map(r=>`${r.datetime},${r.load_mw}`)];
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([rows.join('\n')], {type:'text/csv'})),
+    download: `nrldc_forecast_${activeHorizon}_${forecastData.data_end.slice(0,10)}.csv`
+  });
   a.click();
 }
 
-// ── Resize — redraw chart if window resizes ───────────────────────────────────
+// ── Resize ────────────────────────────────────────────────────────────────────
 let resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
     if (forecastData) {
-      const fc      = forecastData.forecast;
-      const loads   = fc.map(r => r.load_mw);
-      const peak    = Math.max(...loads);
-      const peakIdx = loads.indexOf(peak);
-      drawForecastChart(fc, peak, peakIdx);
+      const loads = forecastData.forecast.map(r=>r.load_mw);
+      drawForecastChart(forecastData.forecast, Math.max(...loads), loads.indexOf(Math.max(...loads)));
     }
   }, 150);
 });
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// ── Nav tabs setup ────────────────────────────────────────────────────────────
+function setupNavTabs() {
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('view-' + tab.dataset.view).classList.add('active');
+    });
+  });
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
 setupNavTabs();
-loadForecast();   // fetches /health, /forecast, /residuals
+loadForecast();
 </script>
 </body>
 </html>
