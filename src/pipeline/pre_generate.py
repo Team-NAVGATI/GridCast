@@ -13,7 +13,6 @@ Outputs:
 
 import json
 import os
-import sys
 import warnings
 from datetime import datetime
 from pathlib import Path
