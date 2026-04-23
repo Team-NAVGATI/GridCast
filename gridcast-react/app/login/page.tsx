@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Settings, Building2, ArrowLeft, ShieldCheck, ArrowRight, Github, Mail } from "lucide-react";
+import { Settings, Building2, ArrowLeft, ShieldCheck, ArrowRight, Terminal, Mail } from "lucide-react";
 
 type LoginMode = null | "admin" | "company";
 
@@ -241,7 +241,7 @@ export default function LoginPage() {
             <div style={{ display: "flex", gap: 10 }}>
               {[
                 { icon: <Mail size={16} />, label: "Google" },
-                { icon: <Github size={16} />, label: "GitHub" }
+                { icon: <Terminal size={16} />, label: "GitHub" }
               ].map(({ icon, label }) => (
                 <button
                   key={label}

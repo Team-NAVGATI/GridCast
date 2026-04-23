@@ -38,7 +38,17 @@ import {
   Mail,
   Terminal,
   ChevronRight,
-  Info
+  Info,
+  DownloadCloud,
+  FileSearch,
+  Filter,
+  Server,
+  Eye,
+  Settings,
+  Code2,
+  Box,
+  TrendingDown,
+  HardDrive
 } from "lucide-react";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -796,15 +806,15 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
           {[
-            ["⚡", "Demand Volatility", "Load swings 15–40% within minutes during peak events, outpacing manual dispatch by 3–5×."],
-            ["☁", "Renewable Intermittency", "Solar and wind generation can drop 80% in minutes. Without forecasting, operators over-provision expensive reserves."],
-            ["📊", "Dispatch Inefficiency", "Without accurate 15-min forecasts, operators carry 20–30% excess reserve capacity at ₹8–12/unit hidden cost."],
-            ["🗄", "Data Quality Gaps", "SCADA telemetry drops, sensor drift, and holiday anomalies create gaps conventional models cannot bridge."],
-            ["🏗", "Infrastructure Stress", "Legacy transmission infrastructure carries 110–125% rated load during heatwaves, risking catastrophic failure."],
-            ["✅", "GridCast Solves This", "96-step autoregressive XGBoost + LSTM pipeline with automated anomaly detection and sub-3% MAPE on NRLDC data.", true],
+            [<Zap key="zap" size={24} />, "Demand Volatility", "Load swings 15–40% within minutes during peak events, outpacing manual dispatch by 3–5×."],
+            [<Cloud key="cloud" size={24} />, "Renewable Intermittency", "Solar and wind generation can drop 80% in minutes. Without forecasting, operators over-provision expensive reserves."],
+            [<BarChart key="bar" size={24} />, "Dispatch Inefficiency", "Without accurate 15-min forecasts, operators carry 20–30% excess reserve capacity at ₹8–12/unit hidden cost."],
+            [<Layers key="db" size={24} />, "Data Quality Gaps", "SCADA telemetry drops, sensor drift, and holiday anomalies create gaps conventional models can't bridge."],
+            [<Factory key="factory" size={24} />, "Infrastructure Stress", "Legacy transmission infrastructure carries 110–125% rated load during heatwaves, risking catastrophic failure."],
+            [<ShieldCheck key="check" size={24} />, "GridCast Solves This", "96-step autoregressive XGBoost + LSTM pipeline with automated anomaly detection and sub-3% MAPE on NRLDC data.", true],
           ].map(([icon, title, desc, highlight]) => (
             <div key={String(title)} className="gc-card" style={{ padding: 28, ...(highlight ? { borderColor: "#06b6d4", background: "rgba(6,182,212,0.07)" } : {}) }}>
-              <div style={{ fontSize: 26, marginBottom: 14 }}>{icon}</div>
+              <div style={{ color: "var(--gc-cyan)", marginBottom: 14 }}>{icon}</div>
               <div style={{ fontWeight: 600, marginBottom: 8, color: highlight ? "#06b6d4" : "#e2e8f0" }}>{title}</div>
               <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.65 }}>{desc}</div>
             </div>
@@ -820,9 +830,16 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
         </div>
         <div style={{ display: "flex", gap: 0, position: "relative", alignItems: "flex-start" }}>
           <div style={{ position: "absolute", top: 20, left: "calc(8.33% + 20px)", right: "calc(8.33% + 20px)", height: 1, background: "linear-gradient(90deg,#06b6d4,#0e7490,#06b6d4)", opacity: 0.4 }} />
-          {[["SC", "Scrape", "Selenium ETL from NLDC portal every 15 min"], ["EX", "Extract", "Parquet feature store with lag & calendar vars"], ["CL", "Clean", "Z-score anomaly detect + gap interpolation"], ["ML", "Train", "XGBoost + LSTM on 2-yr NRLDC data"], ["API", "Serve", "Flask REST · P95 latency <1ms"], ["UI", "Visualise", "Operator dashboard + company portal"]].map(([code, title, desc]) => (
-            <div key={code} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "0 8px" }}>
-              <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(6,182,212,0.15)", border: "1.5px solid #06b6d4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: "#06b6d4", fontFamily: "JetBrains Mono, monospace", position: "relative", zIndex: 2 }}>{code}</div>
+          {[
+            [<DownloadCloud key="sc" size={16} />, "Scrape", "Selenium ETL from NLDC portal every 15 min"],
+            [<FileSearch key="ex" size={16} />, "Extract", "Parquet feature store with lag & calendar vars"],
+            [<Filter key="cl" size={16} />, "Clean", "Z-score anomaly detect + gap interpolation"],
+            [<Cpu key="ml" size={16} />, "Train", "XGBoost + LSTM on 2-yr NRLDC data"],
+            [<Server key="api" size={16} />, "Serve", "Flask REST · P95 latency <1ms"],
+            [<Eye key="ui" size={16} />, "Visualise", "Operator dashboard + company portal"]
+          ].map(([icon, title, desc]) => (
+            <div key={title as string} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "0 8px" }}>
+              <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(6,182,212,0.15)", border: "1.5px solid #06b6d4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: "#06b6d4", fontFamily: "JetBrains Mono, monospace", position: "relative", zIndex: 2 }}>{icon}</div>
               <div style={{ fontWeight: 600, fontSize: 13, textAlign: "center" }}>{title}</div>
               <div style={{ fontSize: 11, color: "#64748b", textAlign: "center", lineHeight: 1.55 }}>{desc}</div>
             </div>
@@ -864,8 +881,14 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
           <h2 style={{ fontSize: 38, fontWeight: 700, letterSpacing: "-1px" }}>Results that matter</h2>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, marginBottom: 56 }}>
-          {[["-30%", "Reserve capacity waste"], ["<3%", "24hr MAPE target"], ["96×", "Decisions per day"], ["<1ms", "API inference latency"]].map(([val, label]) => (
+          {[
+            ["-30%", "Reserve capacity waste", <TrendingDown key="td" size={24} />],
+            ["<3%", "24hr MAPE target", <Target key="tg" size={24} />],
+            ["96×", "Decisions per day", <Zap key="zp" size={24} />],
+            ["<1ms", "API inference latency", <Activity key="ac" size={24} />]
+          ].map(([val, label, icon]) => (
             <div key={String(label)} className="gc-card gc-card-glow" style={{ padding: 28, textAlign: "center" }}>
+              <div style={{ color: "#06b6d4", marginBottom: 12, display: "flex", justifyContent: "center" }}>{icon}</div>
               <div style={{ fontSize: 34, fontWeight: 700, color: "#06b6d4", fontFamily: "JetBrains Mono, monospace" }}>{val}</div>
               <div style={{ fontSize: 13, color: "#64748b", marginTop: 8 }}>{label}</div>
             </div>
@@ -880,9 +903,16 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
           <h2 style={{ fontSize: 38, fontWeight: 700, letterSpacing: "-1px" }}>Production-grade infrastructure</h2>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
-          {[["XGBoost", "Gradient-boosted forecasting with SHAP explainability. 96-step autoregressive rollout.", "#f59e0b"], ["Pandas / Parquet", "Feature store with lag, rolling stats, and calendar features. Sub-100ms load time.", "#06b6d4"], ["Flask REST API", "P95 latency <1ms. Joblib model serialization. Docker-ready deployment.", "#10b981"], ["Selenium ETL", "Automated NLDC data scraping every 15 minutes. Retry logic and gap filling.", "#a78bfa"], ["SVG Dashboard", "Pure SVG visualisations. Zero-dependency, works offline on operator terminals.", "#06b6d4"], ["LSTM (Planned)", "PyTorch sequence model for long-range patterns. Captures weekly seasonality across 96+ steps.", "#f59e0b"]].map(([title, desc, color]) => (
+          {[
+            ["XGBoost", "Gradient-boosted forecasting with SHAP explainability. 96-step autoregressive rollout.", "#f59e0b", <TrendingUp key="xgb" size={20} />],
+            ["Pandas / Parquet", "Feature store with lag, rolling stats, and calendar features. Sub-100ms load time.", "#06b6d4", <HardDrive key="pd" size={20} />],
+            ["Flask REST API", "P95 latency <1ms. Joblib model serialization. Docker-ready deployment.", "#10b981", <Server key="flask" size={20} />],
+            ["Selenium ETL", "Automated NLDC data scraping every 15 minutes. Retry logic and gap filling.", "#a78bfa", <Code2 key="sel" size={20} />],
+            ["SVG Dashboard", "Pure SVG visualisations. Zero-dependency, works offline on operator terminals.", "#06b6d4", <Layers key="svg" size={20} />],
+            ["LSTM (Planned)", "PyTorch sequence model for long-range patterns. Captures weekly seasonality across 96+ steps.", "#f59e0b", <Cpu key="lstm" size={20} />]
+          ].map(([title, desc, color, icon]) => (
             <div key={String(title)} className="gc-card" style={{ padding: 24 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, marginBottom: 14 }} />
+              <div style={{ color: color as string, marginBottom: 14 }}>{icon}</div>
               <div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>
               <div style={{ fontSize: 13, color: "#64748b", lineHeight: 1.65 }}>{desc}</div>
             </div>
@@ -1567,9 +1597,14 @@ function CompanyDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
               <>
                 <div style={{ marginBottom: 24 }}><h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Reports & Compliance</h1><p style={{ color: "#64748b", fontSize: 13 }}>Download GHG inventory reports, BEE compliance summaries, and grid interaction logs.</p></div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
-                  {[["📊", "Monthly Energy Report", "April 2026 · PDF", "GHG inventory, load curve, savings summary"], ["🌿", "Scope 2 Carbon Report", "Q1 2026 · PDF", "CEA-compliant carbon accounting"], ["📋", "BEE PAT Compliance", "FY2025-26 · XLSX", "Bureau of Energy Efficiency PAT data"], ["⚡", "Grid Interaction Log", "April 23 · CSV", "15-min demand & export data"]].map(([icon, title, meta, desc]) => (
-                    <div key={String(title)} className="gc-card" style={{ padding: 22, display: "flex", gap: 16, alignItems: "flex-start", cursor: "pointer" }}>
-                      <span style={{ fontSize: 26 }}>{icon}</span>
+                  {[
+                    [<BarChart key="m" size={26} />, "Monthly Energy Report", "April 2026 · PDF", "GHG inventory, load curve, savings summary"],
+                    [<Leaf key="c" size={26} />, "Scope 2 Carbon Report", "Q1 2026 · PDF", "CEA-compliant carbon accounting"],
+                    [<FileText key="b" size={26} />, "BEE PAT Compliance", "FY2025-26 · XLSX", "Bureau of Energy Efficiency PAT data"],
+                    [<Zap key="g" size={26} />, "Grid Interaction Log", "April 23 · CSV", "15-min demand & export data"]
+                  ].map(([icon, title, meta, desc]) => (
+                    <div key={title as string} className="gc-card" style={{ padding: 22, display: "flex", gap: 16, alignItems: "flex-start", cursor: "pointer" }}>
+                      <span style={{ color: "var(--gc-cyan)" }}>{icon}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 600, marginBottom: 4 }}>{title}</div>
                         <div style={{ fontSize: 11, color: "#06b6d4", marginBottom: 4, fontFamily: "JetBrains Mono" }}>{meta}</div>
