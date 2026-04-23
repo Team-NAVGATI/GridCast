@@ -246,6 +246,7 @@ export default function OnboardingPage() {
                 <div style={{ gridColumn: "span 2" }}>
                   <label className="gc-label">Industry / Facility Type *</label>
                   <select
+                    className="gc-select"
                     style={{ ...inputStyle, cursor: "pointer" }}
                     value={form.industry}
                     onChange={(e) => update("industry", e.target.value)}
@@ -296,6 +297,7 @@ export default function OnboardingPage() {
                 <div>
                   <label className="gc-label">Grid Region</label>
                   <select
+                    className="gc-select"
                     style={{ ...inputStyle, cursor: "pointer" }}
                     value={form.region}
                     onChange={(e) => update("region", e.target.value)}
@@ -403,6 +405,7 @@ export default function OnboardingPage() {
                 <div>
                   <label className="gc-label">Operational Shift Pattern</label>
                   <select
+                    className="gc-select"
                     style={{ ...inputStyle, cursor: "pointer" }}
                     value={form.shift}
                     onChange={(e) => update("shift", e.target.value)}
@@ -541,6 +544,7 @@ export default function OnboardingPage() {
                 <div>
                   <label className="gc-label">Annual Electricity Budget</label>
                   <select
+                    className="gc-select"
                     style={{ ...inputStyle, cursor: "pointer" }}
                     value={form.budgetRange}
                     onChange={(e) => update("budgetRange", e.target.value)}
@@ -555,7 +559,7 @@ export default function OnboardingPage() {
 
                 <div>
                   <label className="gc-label">Primary Optimisation Priority</label>
-                  <select style={{ ...inputStyle, cursor: "pointer" }}>
+                  <select className="gc-select" style={{ ...inputStyle, cursor: "pointer" }}>
                     <option>Cost Reduction (₹ savings)</option>
                     <option>Carbon Footprint (tCO₂)</option>
                     <option>Grid Reliability / Uptime</option>

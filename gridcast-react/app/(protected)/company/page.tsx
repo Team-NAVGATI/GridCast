@@ -1109,7 +1109,7 @@ export default function CompanyDashboard() {
                           <select
                             value={newTaskRegion}
                             onChange={(e) => setNewTaskRegion(e.target.value)}
-                            className="gc-input"
+                            className="gc-input gc-select"
                             style={{ cursor: "pointer" }}
                           >
                             {REGIONS.map((r) => (
