@@ -85,7 +85,7 @@ export function ForecastChart({ data, model, loading }: ForecastChartProps) {
       ],
       stroke: {
         width: [3, 0, 0],
-        curve: 'smooth',
+        curve: 'smooth' as const,
         dashArray: [0, 4, 4]
       },
       xaxis: {

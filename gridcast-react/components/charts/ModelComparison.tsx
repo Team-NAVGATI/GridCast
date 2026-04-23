@@ -2,7 +2,7 @@
 
 import Chart from 'react-apexcharts';
 import { useMemo } from 'react';
-import { ForecastData } from '@/types';
+import { ForecastData, Horizon } from '@/types';
 
 interface ModelComparisonProps {
   xgboostData: ForecastData | null;
