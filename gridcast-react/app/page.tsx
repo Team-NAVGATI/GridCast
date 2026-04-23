@@ -1,3 +1,5 @@
+"use client";
+
 import dynamic from "next/dynamic";
 
 // SSR disabled: all Math.random(), Three.js canvas, and Date.now() live
