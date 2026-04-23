@@ -4,6 +4,20 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import LoadChart from "@/components/charts/LoadChart";
 import { usePredictiveEngine } from "@/lib/predictiveEngine";
+import { 
+  Zap, 
+  Cloud, 
+  BarChart3, 
+  Database, 
+  Construction, 
+  CheckCircle2, 
+  Check, 
+  Hourglass, 
+  Calendar,
+  ArrowRight,
+  TrendingUp,
+  Cpu
+} from "lucide-react";
 
 const HeroCanvas = dynamic(() => import("@/components/three/HeroCanvas"), {
   ssr: false,
@@ -518,37 +532,37 @@ export default function LandingPage() {
           >
             {[
               [
-                "⚡",
+                <Zap key="zap" size={24} />,
                 "Demand Volatility",
                 "Load swings 15–40% within minutes during peak events, outpacing manual dispatch by 3–5× the required speed.",
                 false,
               ],
               [
-                "☁️",
+                <Cloud key="cloud" size={24} />,
                 "Renewable Intermittency",
                 "Solar and wind generation can drop 80% in minutes. Without forecasting, grid operators over-provision expensive reserves.",
                 false,
               ],
               [
-                "📊",
+                <BarChart3 key="bar" size={24} />,
                 "Dispatch Inefficiency",
                 "Without accurate 15-min forecasts, operators carry 20–30% excess reserve capacity at ₹8–12/unit hidden cost.",
                 false,
               ],
               [
-                "🗄️",
+                <Database key="db" size={24} />,
                 "Data Quality Gaps",
                 "SCADA telemetry drops, sensor drift, and holiday anomalies create gaps conventional models can't bridge.",
                 false,
               ],
               [
-                "🏗️",
+                <Construction key="con" size={24} />,
                 "Infrastructure Stress",
                 "Legacy transmission infrastructure carries 110–125% rated load during heatwaves, risking catastrophic failure.",
                 false,
               ],
               [
-                "✅",
+                <CheckCircle2 key="check" size={24} />,
                 "GridCast Solves This",
                 "96-step autoregressive XGBoost + LSTM pipeline with anomaly detection and sub-3% MAPE on NRLDC data.",
                 true,
@@ -567,7 +581,7 @@ export default function LandingPage() {
                     : { padding: 24 }
                 }
               >
-                <div style={{ fontSize: 24, marginBottom: 12 }}>{icon}</div>
+                <div style={{ color: "var(--gc-cyan)", marginBottom: 16 }}>{icon}</div>
                 <div
                   style={{
                     fontWeight: 600,
@@ -910,11 +924,11 @@ export default function LandingPage() {
               }}
             />
             {[
-              ["✓", "Core ML Pipeline", "var(--gc-green)"],
-              ["✓", "Operator Dashboard", "var(--gc-green)"],
-              ["⏳", "Weather Features", "var(--gc-amber)"],
-              ["📅", "Multi-Region", "var(--gc-muted)"],
-              ["📅", "LSTM Fine-tune", "var(--gc-muted)"],
+              [<Check key="c1" size={14} />, "Core ML Pipeline", "var(--gc-green)"],
+              [<Check key="c2" size={14} />, "Operator Dashboard", "var(--gc-green)"],
+              [<Hourglass key="h1" size={14} />, "Weather Features", "var(--gc-amber)"],
+              [<Calendar key="cal1" size={14} />, "Multi-Region", "var(--gc-muted)"],
+              [<Calendar key="cal2" size={14} />, "LSTM Fine-tune", "var(--gc-muted)"],
             ].map(([icon, title, color]) => (
               <div
                 key={title}
