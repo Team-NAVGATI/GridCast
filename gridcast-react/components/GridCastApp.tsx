@@ -1713,19 +1713,6 @@ function AdminDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <ModelComparison xgboostData={xgboostData} lstmData={lstmData} horizon={activeHorizon} loading={loading} />
-                  <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', flex: 1 }}>
-                    <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', color: '#003d99' }}>Status Log</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <div style={{ padding: '10px', background: '#ecfdf5', border: '1px solid #d1fae5', borderRadius: '8px', fontSize: '12px' }}>
-                        <span style={{ color: '#059669', fontWeight: 700 }}>● {activeModel.toUpperCase()} Stable</span>
-                        <p style={{ color: '#64748b', marginTop: '2px' }}>Latest forecast successfully generated.</p>
-                      </div>
-                      <div style={{ padding: '10px', background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '8px', fontSize: '12px' }}>
-                        <span style={{ color: '#d97706', fontWeight: 700 }}>⚠ Peak Alert</span>
-                        <p style={{ color: '#64748b', marginTop: '2px' }}>Predicted peak within 95% of capacity.</p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
 
