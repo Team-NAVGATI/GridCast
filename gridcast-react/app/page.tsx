@@ -2,8 +2,6 @@
 
 import dynamic from "next/dynamic";
 
-// SSR disabled: all Math.random(), Three.js canvas, and Date.now() live
-// exclusively on the client — zero hydration risk.
 const GridCastApp = dynamic(() => import("@/components/GridCastApp"), {
   ssr: false,
   loading: () => (

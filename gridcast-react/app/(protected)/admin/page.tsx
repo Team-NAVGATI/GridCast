@@ -1,717 +1,456 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import LoadChart from "@/components/charts/LoadChart";
-import ErrorHeatmap from "@/components/charts/ErrorHeatmap";
-import { REGIONS } from "@/lib/constants";
+'use client';
 
-type Model = "xgboost" | "lstm";
-type Horizon = "24h" | "48h" | "72h";
-type AdminTab = "forecast" | "analysis" | "models" | "reports";
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
-const MODEL_COLORS: Record<Model, string> = {
-  xgboost: "#378ADD",
-  lstm: "#7C3AED",
-};
-const MODEL_LABELS: Record<Model, string> = {
-  xgboost: "XGBoost",
-  lstm: "LSTM",
-};
+// Types
+import { ForecastData, ResidualData, ModelType, Horizon, MODEL_CONFIGS } from '@/types';
+
+// API
+import { fetchForecastData, fetchResidualData } from '@/lib/api';
+
+// Components
+import { ForecastChart } from '@/components/charts/ForecastChart';
+import { ModelComparison } from '@/components/charts/ModelComparison';
+import { ResidualHeatmap } from '@/components/charts/ResidualHeatmap';
+import { KPICard } from '@/components/dashboard/KPICard';
+
+// Dynamic background
+const DashGridCanvas = dynamic(
+  () => import('@/components/three/DashGridCanvas'),
+  { ssr: false }
+);
+
+type AdminTab = 'forecast' | 'analysis' | 'models' | 'reports';
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [model, setModel] = useState<Model>("xgboost");
-  const [horizon, setHorizon] = useState<Horizon>("24h");
-  const [activeTab, setActiveTab] = useState<AdminTab>("forecast");
+  
+  // State
+  const [activeTab, setActiveTab] = useState<AdminTab>('forecast');
+  const [activeModel, setActiveModel] = useState<ModelType>('xgboost');
+  const [activeHorizon, setActiveHorizon] = useState<Horizon>('24h');
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Data for both models to ensure comparison works
+  const [xgboostData, setXgboostData] = useState<ForecastData | null>(null);
+  const [lstmData, setLstmData] = useState<ForecastData | null>(null);
+  const [residualData, setResidualData] = useState<ResidualData | null>(null);
 
-  const modelColor = MODEL_COLORS[model];
-  const modelLabel = MODEL_LABELS[model];
+  // Fetch all necessary data
+  useEffect(() => {
+    let mounted = true;
 
-  // Generate semi-random next 8 step forecasts (stable)
-  const nextSteps = Array.from({ length: 8 }, (_, i) => ({
-    time: `+${String(Math.floor((i + 1) * 15 / 60)).padStart(2, "0")}:${String(((i + 1) * 15) % 60).padStart(2, "0")}`,
-    mw: 42000 + ((i * 137 + 7) % 800) - 400,
-  }));
+    async function loadData() {
+      setLoading(true);
+      setError(null);
+      try {
+        // Fetch both models and residuals in parallel
+        const [xgb, lstm, res] = await Promise.all([
+          fetchForecastData('xgboost', activeHorizon),
+          fetchForecastData('lstm', activeHorizon),
+          fetchResidualData(activeModel)
+        ]);
+
+        if (mounted) {
+          setXgboostData(xgb);
+          setLstmData(lstm);
+          setResidualData(res);
+        }
+      } catch (err) {
+        console.error('Failed to load admin dashboard data:', err);
+        if (mounted) {
+          setError('Failed to sync with predictive engines. Please check backend services.');
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadData();
+    return () => { mounted = false; };
+  }, [activeHorizon, activeModel]);
+
+  const currentData = activeModel === 'xgboost' ? xgboostData : lstmData;
+  const config = MODEL_CONFIGS[activeModel];
+
+  // Sidebar Items
+  const navItems = [
+    { id: 'forecast', label: 'Forecast', icon: '📊' },
+    { id: 'analysis', label: 'Analysis', icon: '📈' },
+    { id: 'models', label: 'Models', icon: '🧠' },
+    { id: 'reports', label: 'Reports', icon: '📄' },
+  ];
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#020a14] text-[#ff1744]">
+        <div className="text-center p-8 border border-[#ff1744] rounded-lg bg-white/5 backdrop-blur-xl">
+          <h2 className="text-xl font-bold mb-4">Critical Error</h2>
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-6 px-6 py-2 bg-[#ff1744] text-white rounded-md font-medium"
+          >
+            Retry Sync
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="gc-admin-root" style={{ fontFamily: "var(--gc-font-sans)" }}>
-      {/* Progress bar */}
-      <div
-        style={{
-          height: 3,
-          background: `linear-gradient(90deg, ${modelColor}, transparent)`,
-          width: "65%",
-          transition: "background 0.4s",
-        }}
-      />
+    <div className="min-h-screen bg-[#020a14] font-sans text-[#f8faff] flex overflow-hidden">
+      {/* Three.js Background Layer */}
+      <div className="fixed inset-0 pointer-events-none z-0 opacity-40">
+        <DashGridCanvas />
+      </div>
 
-      {/* ── NAV ── */}
-      <nav
-        className="gc-admin-nav"
-        style={{
-          padding: "0 24px",
-          height: 52,
-          display: "flex",
-          alignItems: "center",
-          gap: 0,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginRight: 24,
-          }}
-        >
-          <span
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: "#f59e0b",
-              display: "inline-block",
-            }}
-          />
-          <span style={{ fontWeight: 700, fontSize: 15, color: "#1e293b" }}>
-            Grid<span style={{ color: "#06b6d4" }}>Cast</span>
-          </span>
+      {/* Sidebar */}
+      <aside className="w-[240px] bg-black/40 backdrop-blur-3xl border-r border-white/10 flex flex-col z-10 relative">
+        <div className="p-6 border-b border-white/5">
+          <Link href="/landing" className="flex items-center gap-2 group">
+            <div className="w-6 h-6 rounded-full bg-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.5)] group-hover:scale-110 transition-transform" />
+            <span className="text-xl font-bold tracking-tight">Grid<span className="text-cyan-400">Cast</span> Admin</span>
+          </Link>
         </div>
 
-        {(["forecast", "analysis", "models", "reports"] as AdminTab[]).map(
-          (t) => (
+        <div className="flex-1 py-6 px-3 space-y-1">
+          <p className="px-4 text-[10px] font-bold text-white/40 uppercase tracking-widest mb-4">Operational Views</p>
+          {navItems.map((item) => (
             <button
-              key={t}
-              onClick={() => setActiveTab(t)}
-              style={{
-                padding: "0 16px",
-                height: 52,
-                border: "none",
-                borderBottom: `2px solid ${activeTab === t ? modelColor : "transparent"}`,
-                background: "transparent",
-                fontFamily: "var(--gc-font-sans)",
-                fontSize: 13,
-                fontWeight: activeTab === t ? 600 : 400,
-                color: activeTab === t ? modelColor : "#64748b",
-                cursor: "pointer",
-                textTransform: "capitalize",
-                transition: "color 0.2s, border-color 0.2s",
-              }}
+              key={item.id}
+              onClick={() => setActiveTab(item.id as AdminTab)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                activeTab === item.id 
+                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                  : 'text-white/60 hover:bg-white/5 hover:text-white'
+              }`}
             >
-              {t}
-            </button>
-          )
-        )}
-
-        <div style={{ flex: 1 }} />
-
-        {/* Controls */}
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {(["24h", "48h", "72h"] as Horizon[]).map((h) => (
-            <button
-              key={h}
-              onClick={() => setHorizon(h)}
-              style={{
-                padding: "4px 12px",
-                borderRadius: 6,
-                border: `1px solid ${horizon === h ? modelColor : "#e2e8f0"}`,
-                background: horizon === h ? `${modelColor}18` : "transparent",
-                color: horizon === h ? modelColor : "#64748b",
-                fontSize: 12,
-                cursor: "pointer",
-                fontFamily: "var(--gc-font-sans)",
-                transition: "all 0.2s",
-              }}
-            >
-              {h}
+              <span className="text-lg">{item.icon}</span>
+              <span className="text-sm font-medium">{item.label}</span>
+              {activeTab === item.id && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,1)]" />
+              )}
             </button>
           ))}
-
-          <div style={{ width: 1, height: 20, background: "#e2e8f0", margin: "0 4px" }} />
-
-          <button
-            onClick={() => setModel(model === "xgboost" ? "lstm" : "xgboost")}
-            style={{
-              padding: "4px 14px",
-              borderRadius: 6,
-              border: `1px solid ${modelColor}`,
-              background: `${modelColor}18`,
-              color: modelColor,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: "pointer",
-              fontFamily: "var(--gc-font-sans)",
-              transition: "all 0.3s",
-            }}
-          >
-            {modelLabel} ↕
-          </button>
-
-          <div
-            style={{
-              fontSize: 12,
-              color: "#94a3b8",
-              padding: "4px 10px",
-              background: "#f1f5f9",
-              borderRadius: 6,
-              fontFamily: "var(--gc-font-mono)",
-            }}
-          >
-            Static · Weekly
-          </div>
-
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: "50%",
-              background: `${modelColor}22`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 11,
-              fontWeight: 700,
-              color: modelColor,
-            }}
-          >
-            OP
-          </div>
-
-          <button
-            onClick={() => router.push("/login")}
-            style={{
-              background: "transparent",
-              border: "1px solid #e2e8f0",
-              borderRadius: 6,
-              padding: "4px 12px",
-              fontSize: 12,
-              color: "#64748b",
-              cursor: "pointer",
-              fontFamily: "var(--gc-font-sans)",
-            }}
-          >
-            ← Exit
-          </button>
         </div>
-      </nav>
 
-      <div style={{ display: "flex", height: "calc(100vh - 55px)" }}>
-        {/* ── SIDEBAR ── */}
-        <aside
-          className="gc-admin-sidebar"
-          style={{ width: 184, padding: 16, overflowY: "auto" }}
-        >
-          <div
-            style={{
-              fontSize: 10,
-              color: "#94a3b8",
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              marginBottom: 8,
-            }}
-          >
-            Regions
-          </div>
-
-          {REGIONS.map((r) => (
-            <label
-              key={r.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "6px 0",
-                cursor: "pointer",
-                fontSize: 12,
-                color: r.id === "north" ? r.color : "#64748b",
-              }}
-            >
-              <input
-                type="checkbox"
-                defaultChecked={r.id === "north"}
-                style={{ accentColor: r.color }}
+        <div className="p-6 space-y-4 border-t border-white/5">
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+            <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest mb-2">Active Engine</p>
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-2 h-2 rounded-full" 
+                style={{ backgroundColor: config.color, boxShadow: `0 0 8px ${config.color}` }} 
               />
-              {r.shortLabel}
-              {r.id !== "north" && (
-                <span
-                  style={{
-                    fontSize: 9,
-                    color: "#94a3b8",
-                    marginLeft: "auto",
-                    background: "#f1f5f9",
-                    padding: "1px 5px",
-                    borderRadius: 3,
-                  }}
-                >
-                  Soon
-                </span>
-              )}
-            </label>
-          ))}
-
-          <div
-            style={{ height: 1, background: "#e2e8f0", margin: "16px 0" }}
-          />
-
-          <div
-            style={{
-              fontSize: 10,
-              color: "#94a3b8",
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              marginBottom: 8,
-            }}
-          >
-            Models
-          </div>
-
-          {(["xgboost", "lstm"] as Model[]).map((m) => (
-            <div
-              key={m}
-              onClick={() => setModel(m)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "8px 10px",
-                borderRadius: 6,
-                cursor: "pointer",
-                background: model === m ? `${MODEL_COLORS[m]}12` : "transparent",
-                marginBottom: 4,
-                transition: "background 0.2s",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 12,
-                  color: model === m ? MODEL_COLORS[m] : "#64748b",
-                }}
-              >
-                {MODEL_LABELS[m]}
-              </span>
-              {model === m && (
-                <span
-                  style={{
-                    fontSize: 9,
-                    background: `${MODEL_COLORS[m]}22`,
-                    color: MODEL_COLORS[m],
-                    padding: "2px 6px",
-                    borderRadius: 4,
-                  }}
-                >
-                  Active
-                </span>
-              )}
+              <span className="text-xs font-bold">{config.name} v2.4</span>
             </div>
-          ))}
-
-          <div
-            style={{ height: 1, background: "#e2e8f0", margin: "16px 0" }}
-          />
-
-          <div
-            style={{
-              background: `${modelColor}0a`,
-              border: `1px solid ${modelColor}30`,
-              borderRadius: 8,
-              padding: "10px 12px",
-              fontSize: 11,
-              transition: "all 0.3s",
-            }}
-          >
-            <div style={{ color: modelColor, fontWeight: 600, marginBottom: 4 }}>
-              Active Region
-            </div>
-            <div style={{ color: "#1e293b" }}>North</div>
-            <div style={{ color: "#94a3b8" }}>NRLDC · 15 min</div>
+            <p className="text-[9px] text-white/40 mt-1 italic">NRLDC North Region Cluster</p>
           </div>
-        </aside>
-
-        {/* ── MAIN ── */}
-        <main
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            padding: 20,
-            background: "#f8fafc",
-          }}
-        >
-          {/* Model indicator strip */}
-          <div
-            style={{
-              background: `${modelColor}12`,
-              border: `1px solid ${modelColor}40`,
-              borderRadius: 8,
-              padding: "8px 16px",
-              marginBottom: 16,
-              display: "flex",
-              gap: 12,
-              alignItems: "center",
-              fontSize: 12,
-              transition: "all 0.3s",
-            }}
+          
+          <button 
+            onClick={() => router.push('/login')}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white/5 border border-white/10 text-white/60 text-sm font-medium hover:bg-white/10 hover:text-white transition-all"
           >
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                background: modelColor,
-                display: "inline-block",
-              }}
-            />
-            <span style={{ color: modelColor, fontWeight: 600 }}>
-              {modelLabel} Active
-            </span>
-            <span style={{ color: "#64748b" }}>·</span>
-            <span style={{ color: "#64748b" }}>
-              Data through April 23, 2026 · {horizon} horizon selected
-            </span>
-          </div>
+            <span>←</span> Sign Out
+          </button>
+        </div>
+      </aside>
 
-          {/* KPI row */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(6, 1fr)",
-              gap: 12,
-              marginBottom: 16,
-            }}
-          >
-            {[
-              ["MAPE 24h", "2.4%", "#10b981"],
-              ["MAPE 48h", "3.1%", "#f59e0b"],
-              ["MAPE 72h", "4.2%", "#ef4444"],
-              ["Avg MAE 24h", "342 MW", "#64748b"],
-              ["Pred. Peak", "45,320 MW", modelColor],
-              ["Forecast From", "Apr 23", modelColor],
-            ].map(([label, val, color]) => (
-              <div key={label} className="gc-admin-card" style={{ padding: "12px 14px" }}>
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: "#94a3b8",
-                    marginBottom: 4,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col h-screen overflow-y-auto relative z-10 custom-scrollbar">
+        {/* Top Header */}
+        <header className="sticky top-0 h-20 bg-black/20 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-8 z-20">
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
+              {(['xgboost', 'lstm'] as ModelType[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setActiveModel(m)}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+                    activeModel === m 
+                      ? 'bg-white text-black shadow-lg' 
+                      : 'text-white/40 hover:text-white'
+                  }`}
                 >
-                  {label}
-                </div>
-                <div
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 700,
-                    color,
-                    fontFamily: "var(--gc-font-mono)",
-                    transition: "color 0.3s",
-                  }}
-                >
-                  {val}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Main chart + sidebar */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 240px",
-              gap: 16,
-              marginBottom: 16,
-            }}
-          >
-            <div className="gc-admin-card" style={{ padding: 20 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 12,
-                }}
-              >
-                <div style={{ fontWeight: 600, fontSize: 14 }}>
-                  Grid Load Forecast — North Region
-                </div>
-                <div style={{ display: "flex", gap: 4 }}>
-                  {(["24h", "48h", "72h"] as Horizon[]).map((h) => (
-                    <button
-                      key={h}
-                      onClick={() => setHorizon(h)}
-                      style={{
-                        padding: "3px 10px",
-                        borderRadius: 4,
-                        border: `1px solid ${horizon === h ? modelColor : "#e2e8f0"}`,
-                        background: horizon === h ? `${modelColor}15` : "transparent",
-                        color: horizon === h ? modelColor : "#94a3b8",
-                        fontSize: 11,
-                        cursor: "pointer",
-                        fontFamily: "var(--gc-font-sans)",
-                        transition: "all 0.2s",
-                      }}
-                    >
-                      {h}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <LoadChart height={200} />
-              <div
-                style={{
-                  display: "flex",
-                  gap: 16,
-                  marginTop: 10,
-                  fontSize: 11,
-                  color: "#94a3b8",
-                }}
-              >
-                <span>— Actual</span>
-                <span style={{ color: modelColor }}>— Forecast ({modelLabel})</span>
-                <span>▥ ±5% CI</span>
-              </div>
+                  {m}
+                </button>
+              ))}
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {/* Model comparison */}
-              <div className="gc-admin-card" style={{ padding: 16 }}>
-                <div
-                  style={{ fontSize: 12, fontWeight: 600, marginBottom: 10 }}
+            <div className="h-6 w-px bg-white/10" />
+
+            <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
+              {(['24h', '48h', '72h'] as Horizon[]).map((h) => (
+                <button
+                  key={h}
+                  onClick={() => setActiveHorizon(h)}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    activeHorizon === h 
+                      ? 'bg-cyan-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]' 
+                      : 'text-white/40 hover:text-white'
+                  }`}
                 >
-                  Model Comparison
-                </div>
-                {([
-                  ["XGBoost", 2.4, "#378ADD"],
-                  ["LSTM", 3.1, "#7C3AED"],
-                  ["Linear Baseline", 8.7, "#94a3b8"],
-                ] as [string, number, string][]).map(([name, mape, color]) => (
-                  <div key={name as string} style={{ marginBottom: 10 }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        fontSize: 11,
-                        marginBottom: 3,
-                      }}
-                    >
-                      <span style={{ color: "#64748b" }}>{name}</span>
-                      <span
-                        style={{
-                          color,
-                          fontFamily: "var(--gc-font-mono)",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {mape}%
-                      </span>
+                  {h}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="text-right">
+              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Server Time</p>
+              <p className="text-sm font-dmmono font-bold text-cyan-400">
+                {new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })} IST
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center font-bold text-cyan-400">
+              AD
+            </div>
+          </div>
+        </header>
+
+        {/* View Content */}
+        <div className="p-8 max-w-[1600px] mx-auto w-full">
+          {activeTab === 'forecast' && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="mb-8">
+                <h1 className="text-4xl font-bold tracking-tight">Load Forecast <span className="text-white/30">—</span> <span className="text-cyan-400">{activeHorizon}</span></h1>
+                <p className="text-white/50 mt-2 max-w-2xl">
+                  Production-grade predictive modeling for the NRLDC North Region grid nodes. 
+                  Synchronized with real-time SCADA telemetry.
+                </p>
+              </div>
+
+              {/* KPI Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <KPICard 
+                  label="Forecast MAPE"
+                  value={loading ? '...' : `${currentData?.horizon_metrics[activeHorizon]?.mape?.toFixed(2) ?? '--'}%`}
+                  status={loading ? 'neutral' : (currentData?.horizon_metrics[activeHorizon]?.mape ?? 10) < 3 ? 'good' : 'warn'}
+                  subtext="Backtest Avg Error"
+                  icon={<span className="text-2xl">🎯</span>}
+                  modelColor={config.color}
+                />
+                <KPICard 
+                  label="Predicted Peak"
+                  value={loading ? '...' : `${Math.max(...(currentData?.forecast.map(p => p.load_mw) ?? [0])).toLocaleString()} MW`}
+                  subtext="24h Maximum"
+                  icon={<span className="text-2xl">📈</span>}
+                  modelColor={config.color}
+                />
+                <KPICard 
+                  label="Model Latency"
+                  value="1.2s"
+                  subtext="Inference Roundtrip"
+                  icon={<span className="text-2xl">⚡</span>}
+                  modelColor={config.color}
+                />
+                <KPICard 
+                  label="Last Trained"
+                  value={loading ? '...' : currentData?.trained_at.split(' ')[0] ?? '--'}
+                  subtext="Season-aware refresh"
+                  icon={<span className="text-2xl">🧠</span>}
+                  modelColor={config.color}
+                  highlighted
+                />
+              </div>
+
+              {/* Chart Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <div className="bg-black/30 backdrop-blur-xl rounded-3xl p-8 border border-white/5 shadow-2xl">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h2 className="text-xl font-bold">Grid Load Visualization</h2>
+                        <p className="text-xs text-white/40 mt-1 uppercase tracking-widest font-bold">Model: {config.name} · {activeHorizon} Window</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10">
+                          <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                          <span className="text-[10px] font-bold uppercase">Forecast</span>
+                        </div>
+                      </div>
                     </div>
-                    <div
-                      style={{
-                        background: "#f1f5f9",
-                        borderRadius: 3,
-                        height: 5,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${(1 - (mape as number) / 10) * 100}%`,
-                          height: 5,
-                          borderRadius: 3,
-                          background: color,
-                          transition: "width 0.4s var(--gc-ease)",
-                        }}
+                    <div className="h-[400px]">
+                      <ForecastChart 
+                        data={currentData} 
+                        model={activeModel} 
+                        loading={loading} 
                       />
                     </div>
                   </div>
-                ))}
-              </div>
-
-              {/* Forecast alerts */}
-              <div className="gc-admin-card" style={{ padding: 16, flex: 1 }}>
-                <div
-                  style={{ fontSize: 12, fontWeight: 600, marginBottom: 10 }}
-                >
-                  Forecast Alerts
                 </div>
-                {[
-                  ["✓", "#10b981", "Forecast loaded successfully"],
-                  ["⚠", "#f59e0b", "Data gap detected May–Jul"],
-                  ["ℹ", "#378ADD", "Holiday pattern applied"],
-                ].map(([icon, color, msg]) => (
-                  <div
-                    key={msg}
-                    style={{
-                      display: "flex",
-                      gap: 8,
-                      alignItems: "flex-start",
-                      marginBottom: 8,
-                      fontSize: 11,
-                    }}
-                  >
-                    <span
-                      style={{
-                        color,
-                        fontWeight: 600,
-                        flexShrink: 0,
-                        marginTop: 1,
-                      }}
-                    >
-                      {icon}
-                    </span>
-                    <span style={{ color: "#64748b" }}>{msg}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          {/* Heatmap + Peak Summary */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 300px",
-              gap: 16,
-            }}
-          >
-            <div className="gc-admin-card" style={{ padding: 20 }}>
-              <div
-                style={{ fontWeight: 600, fontSize: 14, marginBottom: 14 }}
-              >
-                Residual Error Heatmap — APE by Slot
-              </div>
-              <ErrorHeatmap />
-              <div
-                style={{
-                  display: "flex",
-                  gap: 12,
-                  marginTop: 12,
-                  fontSize: 11,
-                  color: "#94a3b8",
-                  flexWrap: "wrap",
-                }}
-              >
-                {[
-                  ["#064e3b", "<1.5%"],
-                  ["#065f46", "1.5–3%"],
-                  ["#ca8a04", "3–4.5%"],
-                  ["#b45309", "4.5–6%"],
-                  ["#991b1b", ">6%"],
-                ].map(([color, label]) => (
-                  <span
-                    key={label}
-                    style={{ display: "flex", alignItems: "center", gap: 4 }}
-                  >
-                    <span
-                      style={{
-                        width: 9,
-                        height: 9,
-                        borderRadius: 2,
-                        background: color,
-                        display: "inline-block",
-                      }}
+                <div className="space-y-6">
+                  {/* Model Comparison - CRITICAL: Shows both errors */}
+                  <div className="bg-black/30 backdrop-blur-xl rounded-3xl p-8 border border-white/5 shadow-2xl">
+                    <ModelComparison 
+                      xgboostData={xgboostData} 
+                      lstmData={lstmData} 
+                      loading={loading} 
                     />
-                    {label}
-                  </span>
-                ))}
-              </div>
-            </div>
+                  </div>
 
-            <div className="gc-admin-card" style={{ padding: 20 }}>
-              <div
-                style={{ fontWeight: 600, fontSize: 14, marginBottom: 14 }}
-              >
-                Peak Summary
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 10,
-                  marginBottom: 16,
-                }}
-              >
-                {[
-                  ["Pred. Peak", "45,320 MW"],
-                  ["Pred. Trough", "38,140 MW"],
-                  ["Avg MAPE", "2.4%"],
-                  ["Trained", "Apr 20"],
-                ].map(([label, val]) => (
-                  <div
-                    key={label}
-                    style={{
-                      background: "#f8fafc",
-                      borderRadius: 6,
-                      padding: "10px 12px",
-                    }}
-                  >
-                    <div style={{ fontSize: 10, color: "#94a3b8" }}>{label}</div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        fontFamily: "var(--gc-font-mono)",
-                        color: "#1e293b",
-                        marginTop: 2,
-                      }}
-                    >
-                      {val}
+                  {/* Operational Alerts */}
+                  <div className="bg-black/30 backdrop-blur-xl rounded-3xl p-8 border border-white/5 shadow-2xl">
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                      <span>🔔</span> Engine Alerts
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex gap-3 p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-1.5" />
+                        <div>
+                          <p className="text-sm font-bold text-cyan-400">Forecast Synced</p>
+                          <p className="text-[11px] text-white/50">Successfully fetched {activeHorizon} matrix for {activeModel}.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5" />
+                        <div>
+                          <p className="text-sm font-bold text-amber-400">Peak Load Warning</p>
+                          <p className="text-[11px] text-white/50">Approaching seasonal peak in next 4 hours. MAPE variance may increase.</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                ))}
+                </div>
               </div>
 
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: "#64748b",
-                  marginBottom: 8,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Next 2 Hours — 15min Steps
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "auto 1fr",
-                  gap: "5px 12px",
-                }}
-              >
-                {nextSteps.map(({ time, mw }) => (
-                  <>
-                    <span
-                      key={`t-${time}`}
-                      style={{
-                        color: "#94a3b8",
-                        fontFamily: "var(--gc-font-mono)",
-                        fontSize: 11,
-                      }}
-                    >
-                      {time}
-                    </span>
-                    <span
-                      key={`v-${time}`}
-                      style={{
-                        color: modelColor,
-                        fontWeight: 600,
-                        fontFamily: "var(--gc-font-mono)",
-                        fontSize: 11,
-                        transition: "color 0.3s",
-                      }}
-                    >
-                      {mw.toLocaleString("en-IN")} MW
-                    </span>
-                  </>
-                ))}
+              {/* Heatmap Section */}
+              <div className="mt-8">
+                <div className="bg-black/30 backdrop-blur-xl rounded-3xl p-8 border border-white/5 shadow-2xl">
+                   <ResidualHeatmap data={residualData} loading={loading} />
+                </div>
               </div>
             </div>
-          </div>
-        </main>
-      </div>
+          )}
+
+          {activeTab === 'analysis' && (
+            <div className="animate-in fade-in duration-500">
+               <h1 className="text-4xl font-bold tracking-tight mb-8">Performance Analysis</h1>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div className="p-8 bg-white/5 rounded-3xl border border-white/10">
+                   <h3 className="text-xl font-bold mb-4">Error Pattern Insights</h3>
+                   <ul className="space-y-4 text-white/60">
+                     <li className="flex gap-3"><span className="text-cyan-400">•</span> Morning transition slots (06:00-09:00) show higher variance than mid-day across both models.</li>
+                     <li className="flex gap-3"><span className="text-cyan-400">•</span> XGBoost performs superior in seasonal transitions while LSTM excels in steady-state weekend patterns.</li>
+                     <li className="flex gap-3"><span className="text-cyan-400">•</span> Residual drift observed at 14:00 IST in west nodes - check SCADA calibration.</li>
+                   </ul>
+                 </div>
+                 <div className="p-8 bg-white/5 rounded-3xl border border-white/10">
+                   <h3 className="text-xl font-bold mb-4">Operational Status</h3>
+                   <div className="space-y-6">
+                     <div>
+                       <div className="flex justify-between text-xs font-bold uppercase tracking-widest mb-2 text-white/40">
+                         <span>API Availability</span>
+                         <span className="text-cyan-400">99.9%</span>
+                       </div>
+                       <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                         <div className="h-full w-[99.9%] bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
+                       </div>
+                     </div>
+                     <div>
+                       <div className="flex justify-between text-xs font-bold uppercase tracking-widest mb-2 text-white/40">
+                         <span>Data Pipeline Health</span>
+                         <span className="text-green-400">Operational</span>
+                       </div>
+                       <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                         <div className="h-full w-full bg-green-400" />
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+            </div>
+          )}
+
+          {activeTab === 'models' && (
+            <div className="animate-in fade-in duration-500">
+               <h1 className="text-4xl font-bold tracking-tight mb-8">Forecasting Models</h1>
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 {(['xgboost', 'lstm'] as ModelType[]).map((m) => {
+                   const cfg = MODEL_CONFIGS[m];
+                   return (
+                     <div key={m} className="p-6 bg-white/5 rounded-3xl border border-white/10 hover:border-white/20 transition-all group">
+                       <div className="flex items-center gap-4 mb-4">
+                         <div className="p-3 rounded-2xl bg-white/5 group-hover:scale-110 transition-transform">
+                           <span className="text-2xl">{m === 'xgboost' ? '🌳' : '🧠'}</span>
+                         </div>
+                         <div>
+                           <h4 className="text-xl font-bold">{cfg.name}</h4>
+                           <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Direct Forecast</span>
+                         </div>
+                       </div>
+                       <p className="text-sm text-white/50 mb-6">{cfg.subtitle}</p>
+                       <div className="space-y-2">
+                         <div className="flex justify-between text-xs">
+                           <span className="text-white/40">Status</span>
+                           <span className="text-green-400 font-bold">READY</span>
+                         </div>
+                         <div className="flex justify-between text-xs">
+                           <span className="text-white/40">Horizon Support</span>
+                           <span className="text-white/80">24h, 48h, 72h</span>
+                         </div>
+                       </div>
+                     </div>
+                   );
+                 })}
+                 <div className="p-6 bg-white/5 rounded-3xl border border-white/5 border-dashed flex flex-col items-center justify-center text-center opacity-50">
+                    <span className="text-2xl mb-2">➕</span>
+                    <h4 className="text-sm font-bold">Add Ensemble Layer</h4>
+                    <p className="text-[10px] text-white/40 mt-1">Coming Q3 2026</p>
+                 </div>
+               </div>
+            </div>
+          )}
+
+          {activeTab === 'reports' && (
+            <div className="animate-in fade-in duration-500">
+               <h1 className="text-4xl font-bold tracking-tight mb-8">System Reports</h1>
+               <div className="bg-white/5 rounded-3xl border border-white/10 p-8 text-center">
+                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                   📅
+                 </div>
+                 <h3 className="text-xl font-bold mb-2">Operational Digest</h3>
+                 <p className="text-white/50 text-sm max-w-md mx-auto mb-6">
+                   Automated summaries of grid stability and forecast accuracy for stakeholder review.
+                 </p>
+                 <div className="flex gap-4 justify-center">
+                   <button className="px-6 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold hover:bg-white/10 transition-all">Download PDF</button>
+                   <button className="px-6 py-2 bg-white/10 border border-white/10 rounded-xl text-sm font-bold hover:bg-white/20 transition-all">Export CSV</button>
+                 </div>
+               </div>
+            </div>
+          )}
+        </div>
+      </main>
+
+      <style jsx global>{`
+        .font-dmmono {
+          font-family: 'JetBrains Mono', 'DM Mono', monospace;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.2);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+      `}</style>
     </div>
   );
 }

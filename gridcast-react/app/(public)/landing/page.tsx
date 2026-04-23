@@ -1,16 +1,54 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import LoadChart from "@/components/charts/LoadChart";
-import { GRID_NODES } from "@/lib/mockData";
+import { usePredictiveEngine } from "@/lib/predictiveEngine";
 
 const HeroCanvas = dynamic(() => import("@/components/three/HeroCanvas"), {
   ssr: false,
 });
 
+type NodeState = "active" | "warn" | "critical";
+interface GridNode {
+  id: number;
+  label: string;
+  state: NodeState;
+}
+
+const INITIAL_NODES: GridNode[] = [
+  "DEL-N", "DEL-S", "HP-01", "PB-01", "PB-02",
+  "HR-01", "HR-02", "UK-01", "UK-02", "RJ-01",
+  "RJ-02", "UP-N", "UP-S", "UP-E", "UP-W",
+  "BR-01", "JK-01", "HP-02", "CG-01", "MP-01",
+].map((label, id) => ({
+  id,
+  label,
+  state: Math.random() > 0.85 ? "warn" : "active",
+}));
+
 export default function LandingPage() {
   const [scrollY, setScrollY] = useState(0);
+  const [nodes, setNodes] = useState<GridNode[]>(INITIAL_NODES);
+  
+  // Use real predictions to drive the landing chart instead of mockData
+  const { chartData, metrics, loading } = usePredictiveEngine(42000, "xgboost", "24h");
+
+  useEffect(() => {
+    // Randomize grid nodes every 3 seconds for visual effect
+    const interval = setInterval(() => {
+      setNodes((prev) =>
+        prev.map((n) => {
+          const r = Math.random();
+          let state: NodeState = "active";
+          if (r > 0.95) state = "critical";
+          else if (r > 0.8) state = "warn";
+          return { ...n, state };
+        })
+      );
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
@@ -348,7 +386,7 @@ export default function LandingPage() {
                   marginBottom: 20,
                 }}
               >
-                {GRID_NODES.slice(0, 20).map((n) => (
+                {nodes.map((n) => (
                   <div
                     key={n.id}
                     style={{
@@ -424,7 +462,7 @@ export default function LandingPage() {
                       fontFamily: "var(--gc-font-mono)",
                     }}
                   >
-                    42,180 MW
+                    {chartData ? `${Math.round(chartData.actual[chartData.actual.length - 1]).toLocaleString()} MW` : "42,180 MW"}
                   </span>
                 </div>
                 <div
@@ -687,11 +725,11 @@ export default function LandingPage() {
               className="gc-reveal"
             >
               {[
-                ["Current Load", "42,180 MW", "var(--gc-cyan)"],
-                ["Peak Forecast", "45,320 MW", "var(--gc-amber)"],
-                ["Model MAPE", "2.4%", "var(--gc-green)"],
-                ["Last Updated", "14:30 IST", "var(--gc-text-2)"],
-                ["API Status", "● LIVE", "var(--gc-green)"],
+                ["Current Load", chartData ? `${Math.round(chartData.actual[chartData.actual.length - 1]).toLocaleString()} MW` : "42,180 MW", "var(--gc-cyan)"],
+                ["Peak Forecast", chartData ? `${Math.round(Math.max(...chartData.forecast)).toLocaleString()} MW` : "45,320 MW", "var(--gc-amber)"],
+                ["Model MAPE", metrics?.mape ? `${metrics.mape.toFixed(2)}%` : "2.4%", "var(--gc-green)"],
+                ["Last Updated", metrics?.dataEnd ? new Date(metrics.dataEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "14:30 IST", "var(--gc-text-2)"],
+                ["API Status", loading ? "● SYNCING" : chartData ? "● LIVE" : "○ OFFLINE", loading ? "var(--gc-amber)" : chartData ? "var(--gc-green)" : "var(--gc-red)"],
               ].map(([label, val, color]) => (
                 <div
                   key={label}
@@ -734,7 +772,21 @@ export default function LandingPage() {
               >
                 24-Hour Load Forecast — North Region (MW)
               </div>
-              <LoadChart height={180} />
+              {loading ? (
+                <div style={{ height: 180, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gc-muted)", fontSize: 13 }}>
+                  Spinning up predictive engine...
+                </div>
+              ) : chartData ? (
+                <LoadChart 
+                  height={180} 
+                  actual={chartData.actual} 
+                  forecast={chartData.forecast} 
+                />
+              ) : (
+                <div style={{ height: 180, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gc-red)", fontSize: 13 }}>
+                  [Pipeline Offline] Run `npm run sync:data` to populate metrics.
+                </div>
+              )}
               <div
                 style={{
                   display: "flex",

@@ -13,6 +13,13 @@ export default function LoginPage() {
 
   const handleLogin = (target: string) => {
     setLoading(true);
+    // Set demo session cookie
+    if (mode === 'admin') {
+      document.cookie = "gridcast-session=admin; path=/; max-age=3600";
+    } else {
+      document.cookie = "gridcast-session=company; path=/; max-age=3600";
+    }
+    
     setTimeout(() => {
       setLoading(false);
       router.push(target);
@@ -208,7 +215,7 @@ export default function LoginPage() {
 
             <button
               id="login-submit"
-              onClick={() => handleLogin(mode === "admin" ? "/admin" : "/onboarding")}
+              onClick={() => handleLogin(mode === "admin" ? "/" : "/onboarding")}
               className="gc-btn gc-btn-primary"
               style={{ width: "100%", justifyContent: "center", fontSize: 14, padding: "13px", opacity: loading ? 0.75 : 1 }}
               disabled={loading}

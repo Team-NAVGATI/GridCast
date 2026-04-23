@@ -12,25 +12,43 @@ import {
   INDIA_GRID_EMISSION_FACTOR,
   INR_PER_KWH,
 } from "@/lib/constants";
-import { computeSavings } from "@/lib/mockData";
 
 const DashGridCanvas = dynamic(
   () => import("@/components/three/DashGridCanvas"),
   { ssr: false }
 );
 
+import { usePredictiveEngine } from "@/lib/predictiveEngine";
+
 const BASE_MW = 8.5;
-const savings = computeSavings(BASE_MW);
 
 type Tab = "overview" | "forecast" | "carbon" | "schedule" | "reports";
 
 export default function CompanyDashboard() {
   const router = useRouter();
+  const { loading, error, savings, chartData, residualMatrix } = usePredictiveEngine(BASE_MW, "xgboost", "24h");
+  
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [selectedTask, setSelectedTask] = useState<number | null>(null);
   const [schedulerOpen, setSchedulerOpen] = useState(false);
   const [newTaskTime, setNewTaskTime] = useState("02:00");
   const [newTaskRegion, setNewTaskRegion] = useState("north");
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--gc-bg)", color: "var(--gc-cyan)" }}>
+        Loading GridCast Engine...
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--gc-bg)", color: "var(--gc-red)" }}>
+        Error loading predictive models: {error}
+      </div>
+    );
+  }
 
   const kpiCards = [
     {
@@ -377,7 +395,11 @@ export default function CompanyDashboard() {
                       MAPE 2.4%
                     </div>
                   </div>
-                  <LoadChart height={180} />
+                  <LoadChart 
+                    height={180} 
+                    actual={chartData?.actual} 
+                    forecast={chartData?.forecast}
+                  />
                 </div>
 
                 <div className="gc-card" style={{ padding: 20 }}>
@@ -530,14 +552,19 @@ export default function CompanyDashboard() {
                     ↓ Export CSV
                   </button>
                 </div>
-                <LoadChart height={220} />
+                <LoadChart 
+                  height={220} 
+                  actual={chartData?.actual} 
+                  forecast={chartData?.forecast} 
+                  optimized={chartData?.optimized} 
+                />
               </div>
 
               <div className="gc-card" style={{ padding: 24 }}>
                 <div style={{ fontWeight: 600, marginBottom: 16 }}>
                   Residual Error Heatmap (APE %)
                 </div>
-                <ErrorHeatmap />
+                <ErrorHeatmap matrix={residualMatrix} />
                 <div
                   style={{
                     display: "flex",

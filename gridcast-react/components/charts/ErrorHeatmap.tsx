@@ -1,27 +1,64 @@
 "use client";
 
-export default function ErrorHeatmap() {
+import { Fragment, useMemo } from "react";
+
+interface ErrorHeatmapProps {
+  matrix?: number[][] | null;
+  noDataText?: string;
+}
+
+export default function ErrorHeatmap({
+  matrix,
+  noDataText = "No residual data available",
+}: ErrorHeatmapProps) {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
-  // Seeded random data (stable across renders)
-  const data = days.map(() =>
-    hours.map((_, h) => {
-      const base = h >= 8 && h <= 20 ? 3.5 : 1.2;
-      return base + ((h * 17 + days.indexOf(days[0]) * 7) % 10) * 0.3;
-    })
-  );
+  const data = useMemo(() => {
+    if (!Array.isArray(matrix) || matrix.length === 0) {
+      return [];
+    }
+
+    return days.map((_, dayIdx) => {
+      const row = matrix[dayIdx] ?? [];
+      return hours.map((hourIdx) => {
+        const value = Number(row[hourIdx]);
+        return Number.isFinite(value) ? value : 0;
+      });
+    });
+  }, [days, hours, matrix]);
+
+  const hasData = data.length > 0;
 
   const colorOf = (v: number) => {
     if (v < 1.5) return "#064e3b";
     if (v < 2.5) return "#065f46";
     if (v < 3.5) return "#ca8a04";
-    if (v < 5)   return "#b45309";
+    if (v < 5) return "#b45309";
     return "#991b1b";
   };
 
   return (
     <div style={{ overflowX: "auto" }}>
+      {!hasData && (
+        <div
+          style={{
+            minWidth: 500,
+            height: 120,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "1px dashed #1e3a4a",
+            borderRadius: 8,
+            color: "#64748b",
+            fontSize: 12,
+          }}
+        >
+          {noDataText}
+        </div>
+      )}
+
+      {hasData && (
       <div
         style={{
           display: "grid",
@@ -43,9 +80,8 @@ export default function ErrorHeatmap() {
 
         {/* Rows */}
         {days.map((day, di) => (
-          <>
+          <Fragment key={day}>
             <div
-              key={`day-${day}`}
               style={{
                 fontSize: 10,
                 color: "#94a3b8",
@@ -58,7 +94,7 @@ export default function ErrorHeatmap() {
             {hours.map((_, hi) => (
               <div
                 key={`cell-${di}-${hi}`}
-                title={`${data[di][hi].toFixed(1)}% MAPE`}
+                title={`${data[di][hi].toFixed(2)}% MAPE`}
                 style={{
                   height: 12,
                   borderRadius: 2,
@@ -67,9 +103,10 @@ export default function ErrorHeatmap() {
                 }}
               />
             ))}
-          </>
+          </Fragment>
         ))}
       </div>
+      )}
     </div>
   );
 }

@@ -1,18 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo, Fragment } from "react";
-import dynamic from "next/dynamic";
-import { usePredictiveEngine } from "@/lib/predictiveEngine";
-import { ForecastData, ResidualData, ModelType, Horizon, MODEL_CONFIGS } from '@/types';
-import { fetchForecastData, fetchResidualData } from '@/lib/api';
-
-// New Chart Components
-import { ForecastChart } from '@/components/charts/ForecastChart';
-import { ModelComparison } from '@/components/charts/ModelComparison';
-import { ResidualHeatmap } from '@/components/charts/ResidualHeatmap';
-import { KPICard } from '@/components/dashboard/KPICard';
-
-const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 declare global {
@@ -27,41 +15,41 @@ const INR_PER_KWH = 7.5;
 
 const REGIONS = [
   { id: "north", label: "North (NRLDC)", nodes: ["DEL-N", "HR-01", "UP-02", "PB-01", "RJ-03"], color: "#06b6d4" },
-  { id: "west", label: "West (WRLDC)", nodes: ["MH-01", "GJ-02", "MP-03", "CG-01", "GJ-03"], color: "#f59e0b" },
+  { id: "west",  label: "West (WRLDC)",  nodes: ["MH-01", "GJ-02", "MP-03", "CG-01", "GJ-03"], color: "#f59e0b" },
   { id: "south", label: "South (SRLDC)", nodes: ["KA-01", "TN-02", "AP-03", "TS-01", "KL-02"], color: "#10b981" },
-  { id: "east", label: "East (ERLDC)", nodes: ["WB-01", "OR-02", "JH-01", "BR-02", "AS-01"], color: "#a78bfa" },
+  { id: "east",  label: "East (ERLDC)",  nodes: ["WB-01", "OR-02", "JH-01", "BR-02", "AS-01"], color: "#a78bfa" },
 ];
 
 const INDUSTRY_TYPES = [
-  { value: "data_center", label: "Data Center / Cloud Infrastructure", baseLoad: 8.5, pue: 1.6 },
-  { value: "manufacturing", label: "Heavy Manufacturing / Steel Plant", baseLoad: 45, pue: 1.0 },
-  { value: "pharma", label: "Pharmaceutical / Cold Chain", baseLoad: 12, pue: 1.2 },
-  { value: "it_campus", label: "IT Campus / Tech Park", baseLoad: 5.5, pue: 1.3 },
-  { value: "textile", label: "Textile / Garment Factory", baseLoad: 22, pue: 1.0 },
-  { value: "hospital", label: "Hospital / Healthcare Complex", baseLoad: 3.5, pue: 1.1 },
-  { value: "cement", label: "Cement / Mining Operations", baseLoad: 60, pue: 1.0 },
-  { value: "retail", label: "Retail Chain / Mall Operations", baseLoad: 4.5, pue: 1.2 },
+  { value: "data_center",   label: "Data Center / Cloud Infrastructure",   baseLoad: 8.5,  pue: 1.6 },
+  { value: "manufacturing", label: "Heavy Manufacturing / Steel Plant",      baseLoad: 45,   pue: 1.0 },
+  { value: "pharma",        label: "Pharmaceutical / Cold Chain",            baseLoad: 12,   pue: 1.2 },
+  { value: "it_campus",     label: "IT Campus / Tech Park",                  baseLoad: 5.5,  pue: 1.3 },
+  { value: "textile",       label: "Textile / Garment Factory",              baseLoad: 22,   pue: 1.0 },
+  { value: "hospital",      label: "Hospital / Healthcare Complex",          baseLoad: 3.5,  pue: 1.1 },
+  { value: "cement",        label: "Cement / Mining Operations",             baseLoad: 60,   pue: 1.0 },
+  { value: "retail",        label: "Retail Chain / Mall Operations",         baseLoad: 4.5,  pue: 1.2 },
 ];
 
 const SHIFT_PATTERNS = [
-  { value: "24x7", label: "24×7 Continuous Operations" },
-  { value: "double", label: "Double Shift (16 hrs/day)" },
-  { value: "single", label: "Single Shift (8 hrs/day)" },
+  { value: "24x7",       label: "24×7 Continuous Operations" },
+  { value: "double",     label: "Double Shift (16 hrs/day)" },
+  { value: "single",     label: "Single Shift (8 hrs/day)" },
   { value: "peak_avoid", label: "Flexible / Peak-Hour Avoidance" },
 ];
 
 const COOLING_TYPES = [
-  { value: "air", label: "Air Cooling (HVAC)" },
-  { value: "liquid", label: "Liquid / Immersion Cooling" },
-  { value: "evap", label: "Evaporative Cooling Tower" },
+  { value: "air",      label: "Air Cooling (HVAC)" },
+  { value: "liquid",   label: "Liquid / Immersion Cooling" },
+  { value: "evap",     label: "Evaporative Cooling Tower" },
   { value: "district", label: "District Cooling" },
 ];
 
 const SCHEDULED_TASKS = [
-  { id: 1, name: "Batch Processing Jobs", currentTime: "14:00", optimalTime: "02:30", savingsPercent: 18, region: "north" },
-  { id: 2, name: "HVAC Pre-cooling Cycle", currentTime: "08:00", optimalTime: "06:00", savingsPercent: 12, region: "north" },
-  { id: 3, name: "EV Fleet Charging", currentTime: "09:00", optimalTime: "01:00", savingsPercent: 25, region: "west" },
-  { id: 4, name: "Database Backup & Sync", currentTime: "22:00", optimalTime: "03:00", savingsPercent: 8, region: "north" },
+  { id: 1, name: "Batch Processing Jobs",      currentTime: "14:00", optimalTime: "02:30", savingsPercent: 18, region: "north" },
+  { id: 2, name: "HVAC Pre-cooling Cycle",     currentTime: "08:00", optimalTime: "06:00", savingsPercent: 12, region: "north" },
+  { id: 3, name: "EV Fleet Charging",          currentTime: "09:00", optimalTime: "01:00", savingsPercent: 25, region: "west"  },
+  { id: 4, name: "Database Backup & Sync",     currentTime: "22:00", optimalTime: "03:00", savingsPercent: 8,  region: "north" },
   { id: 5, name: "Manufacturing Line Startup", currentTime: "07:00", optimalTime: "05:30", savingsPercent: 15, region: "south" },
 ];
 
@@ -240,10 +228,10 @@ function useThreeDashGrid(canvasRef: React.RefObject<HTMLCanvasElement | null>, 
     });
 
     const lMat = new THREE.LineBasicMaterial({ color: 0x164e63, transparent: true, opacity: 0.5 });
-    const hubs = [[-10, -10], [10, -10], [-10, 10], [10, 10]];
-    hubs.forEach(([ax, az], i) => hubs.forEach(([bx, bz], j) => {
+    const hubs = [[-10,-10],[10,-10],[-10,10],[10,10]];
+    hubs.forEach(([ax,az], i) => hubs.forEach(([bx,bz], j) => {
       if (j <= i) return;
-      scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(ax, 0, az), new THREE.Vector3(bx, 0, bz)]), lMat));
+      scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(ax,0,az), new THREE.Vector3(bx,0,bz)]), lMat));
     }));
 
     const sparkCount = 80;
@@ -254,7 +242,7 @@ function useThreeDashGrid(canvasRef: React.RefObject<HTMLCanvasElement | null>, 
       const cx = (ri % 2) * 20 - 10, cz = Math.floor(ri / 2) * 20 - 10;
       sparkData.push({ cx, cz, t: rng() });
       const angle = sparkData[i].t * Math.PI * 2;
-      sparkPos[i * 3] = cx + 6 * Math.cos(angle); sparkPos[i * 3 + 1] = 0; sparkPos[i * 3 + 2] = cz + 6 * Math.sin(angle);
+      sparkPos[i*3] = cx + 6*Math.cos(angle); sparkPos[i*3+1] = 0; sparkPos[i*3+2] = cz + 6*Math.sin(angle);
     }
     const sGeo = new THREE.BufferGeometry();
     sGeo.setAttribute("position", new THREE.BufferAttribute(sparkPos, 3));
@@ -269,14 +257,14 @@ function useThreeDashGrid(canvasRef: React.RefObject<HTMLCanvasElement | null>, 
       sparkData.forEach((s, i) => {
         s.t = (s.t + 0.01) % 1;
         const a = s.t * Math.PI * 2;
-        sp[i * 3] = s.cx + 6 * Math.cos(a); sp[i * 3 + 1] = 0.2 * Math.sin(s.t * Math.PI * 4); sp[i * 3 + 2] = s.cz + 6 * Math.sin(a);
+        sp[i*3] = s.cx + 6*Math.cos(a); sp[i*3+1] = 0.2*Math.sin(s.t*Math.PI*4); sp[i*3+2] = s.cz + 6*Math.sin(a);
       });
       sGeo.attributes.position.needsUpdate = true;
-      camera.position.x = 35 * Math.sin(t * 0.03); camera.position.z = 35 * Math.cos(t * 0.03);
-      camera.lookAt(0, 0, 0); renderer.render(scene, camera);
+      camera.position.x = 35*Math.sin(t*0.03); camera.position.z = 35*Math.cos(t*0.03);
+      camera.lookAt(0,0,0); renderer.render(scene, camera);
     };
     animate();
-    const onResize = () => { if (!canvas.clientWidth) return; camera.aspect = canvas.clientWidth / canvas.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(canvas.clientWidth, canvas.clientHeight); };
+    const onResize = () => { if (!canvas.clientWidth) return; camera.aspect = canvas.clientWidth/canvas.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(canvas.clientWidth, canvas.clientHeight); };
     window.addEventListener("resize", onResize);
     return () => { cancelAnimationFrame(frame); window.removeEventListener("resize", onResize); renderer.dispose(); };
   }, [canvasRef, active]);
@@ -326,230 +314,29 @@ function LoadChart({ actual, forecast, height = 200 }: LoadChartProps) {
   );
 }
 
-interface PremiumCompanyForecastChartProps {
-  timestamps?: string[] | null;
-  actual?: number[] | null;
-  forecast?: number[] | null;
-  optimized?: number[] | null;
-  modelLabel: string;
-  horizon: "24h" | "48h" | "72h";
-  height?: number;
-}
-
-function formatHourLabel(timestamp: string) {
-  const date = new Date(timestamp);
-  if (Number.isNaN(date.getTime())) return timestamp;
-  return date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false });
-}
-
-function PremiumCompanyForecastChart({
-  timestamps,
-  actual,
-  forecast,
-  optimized,
-  modelLabel,
-  horizon,
-  height = 280,
-}: PremiumCompanyForecastChartProps) {
-  const hasData =
-    !!timestamps &&
-    !!actual &&
-    !!forecast &&
-    timestamps.length > 0 &&
-    actual.length === timestamps.length &&
-    forecast.length === timestamps.length;
-
-  if (!hasData) {
-    return (
-      <div
-        style={{
-          border: "1px solid rgba(6,182,212,0.18)",
-          borderRadius: 12,
-          padding: "18px 16px",
-          color: "#94a3b8",
-          fontSize: 13,
-          background: "rgba(2,15,26,0.45)",
-        }}
-      >
-        No forecast data available for this view.
-      </div>
-    );
-  }
-
-  const safeTimestamps = timestamps as string[];
-  const safeActual = actual as number[];
-  const safeForecast = forecast as number[];
-  const safeOptimized = optimized && optimized.length === safeForecast.length ? optimized : null;
-
-  const peakIndex = safeForecast.reduce(
-    (bestIndex, value, index) => (value > safeForecast[bestIndex] ? index : bestIndex),
-    0
-  );
-  const peakValue = safeForecast[peakIndex] ?? 0;
-  const avgForecast = safeForecast.reduce((sum, value) => sum + value, 0) / safeForecast.length;
-  const optimizedMWhPerDay = safeOptimized
-    ? (safeForecast.reduce((sum, value) => sum + value, 0) - safeOptimized.reduce((sum, value) => sum + value, 0)) / 4
-    : 0;
-
-  const categories = safeTimestamps.map(formatHourLabel);
-  const peakCategory = categories[peakIndex] ?? categories[0];
-
-  const options = {
-    chart: {
-      type: "line",
-      height,
-      toolbar: { show: false },
-      animations: { enabled: true, speed: 650 },
-      zoom: { enabled: false },
-      fontFamily: "Space Grotesk, sans-serif",
-      background: "transparent",
-    },
-    colors: ["#0ea5e9", "#22d3ee", "#34d399"],
-    stroke: { width: [2.2, 2.8, 1.8], curve: "smooth" },
-    dataLabels: { enabled: false },
-    markers: { size: [0, 0, 0], hover: { size: 5 } },
-    fill: {
-      type: ["solid", "gradient", "gradient"],
-      gradient: {
-        shadeIntensity: 0.35,
-        inverseColors: false,
-        opacityFrom: 0.36,
-        opacityTo: 0.03,
-        stops: [0, 95, 100],
-      },
-    },
-    grid: {
-      borderColor: "rgba(148,163,184,0.2)",
-      strokeDashArray: 4,
-      xaxis: { lines: { show: false } },
-    },
-    legend: {
-      show: true,
-      position: "top",
-      horizontalAlign: "left",
-      labels: { colors: "#94a3b8" },
-      fontSize: "12px",
-    },
-    xaxis: {
-      categories,
-      labels: {
-        style: { colors: "#64748b", fontSize: "11px" },
-        rotate: -35,
-        hideOverlappingLabels: true,
-      },
-      axisTicks: { show: false },
-      axisBorder: { color: "rgba(148,163,184,0.2)" },
-      tickAmount: 8,
-    },
-    yaxis: {
-      labels: {
-        style: { colors: "#64748b", fontSize: "11px" },
-        formatter: (value: number) => `${Math.round(value).toLocaleString("en-IN")}`,
-      },
-    },
-    tooltip: {
-      shared: true,
-      intersect: false,
-      custom: ({ series, dataPointIndex, w }: any) => {
-        const t = w.globals.categoryLabels?.[dataPointIndex] ?? "";
-        const rows = w.globals.seriesNames
-          .map((name: string, idx: number) => {
-            const value = series[idx]?.[dataPointIndex];
-            if (typeof value !== "number") return "";
-            const color = w.globals.colors?.[idx] ?? "#22d3ee";
-            return `<div style="display:flex;justify-content:space-between;gap:16px;margin-top:6px;"><span style="color:${color};font-weight:600;">${name}</span><span style="color:#e2e8f0;font-family:'JetBrains Mono',monospace;">${Math.round(value).toLocaleString('en-IN')} MW</span></div>`;
-          })
-          .join("");
-
-        return `<div style="background:#020f1a;border:1px solid rgba(34,211,238,.35);border-radius:10px;padding:10px 12px;min-width:220px;"><div style="color:#67e8f9;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;">${t}</div>${rows}</div>`;
-      },
-    },
-    annotations: {
-      points: [
-        {
-          x: peakCategory,
-          y: Number(peakValue.toFixed(2)),
-          marker: { size: 6, fillColor: "#ffffff", strokeColor: "#22d3ee", strokeWidth: 2 },
-          label: {
-            borderColor: "#22d3ee",
-            offsetY: -12,
-            style: { fontSize: "11px", color: "#083344", background: "#67e8f9" },
-            text: `Pointer Tag: Peak ${Math.round(peakValue).toLocaleString("en-IN")} MW`,
-          },
-        },
-      ],
-      yaxis: [
-        {
-          y: Number(avgForecast.toFixed(2)),
-          borderColor: "rgba(148,163,184,0.55)",
-          strokeDashArray: 4,
-          label: {
-            text: `Avg ${Math.round(avgForecast).toLocaleString("en-IN")} MW`,
-            style: { fontSize: "10px", background: "#cbd5e1", color: "#0f172a" },
-          },
-        },
-      ],
-    },
-  };
-
-  const series = [
-    { name: "Actual", type: "line", data: safeActual.map((value) => Number(value.toFixed(2))) },
-    { name: `Forecast (${modelLabel})`, type: "area", data: safeForecast.map((value) => Number(value.toFixed(2))) },
-    ...(safeOptimized
-      ? [{ name: "Optimized Target", type: "line", data: safeOptimized.map((value) => Number(value.toFixed(2))) }]
-      : []),
-  ];
-
-  return (
-    <>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-        <span style={{ fontSize: 11, color: "#67e8f9", border: "1px solid rgba(103,232,249,0.35)", background: "rgba(6,182,212,0.14)", borderRadius: 999, padding: "4px 10px", letterSpacing: 0.4 }}>
-          Peak Pointer {peakCategory}
-        </span>
-        <span style={{ fontSize: 11, color: "#94a3b8", border: "1px solid rgba(148,163,184,0.28)", borderRadius: 999, padding: "4px 10px" }}>
-          Horizon {horizon.toUpperCase()} · {safeForecast.length} intervals
-        </span>
-        {safeOptimized && (
-          <span style={{ fontSize: 11, color: "#86efac", border: "1px solid rgba(134,239,172,0.35)", borderRadius: 999, padding: "4px 10px" }}>
-            Optimizable {optimizedMWhPerDay.toFixed(1)} MWh/day
-          </span>
-        )}
-      </div>
-      <ReactApexChart type="line" height={height} options={options as any} series={series as any} />
-    </>
-  );
-}
-
 // ─── ERROR HEATMAP (deterministic) ────────────────────────────────────────────
-function ErrorHeatmap({ matrix }: { matrix?: number[][] | null }) {
+function ErrorHeatmap() {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const data = useMemo(() => {
-    if (matrix && matrix.length > 0) {
-      return days.map((_, di) => hours.map(hi => {
-        const row = matrix[di] ?? [];
-        const value = Number(row[hi]);
-        return Number.isFinite(value) ? value : 0;
-      }));
-    }
     const rng = seededRng(99);
     return days.map(() => hours.map(() => rng() * 8));
-  }, [matrix, days, hours]);
+  }, []);
   const colorOf = (v: number) => v < 1.5 ? "#064e3b" : v < 3 ? "#065f46" : v < 4.5 ? "#ca8a04" : v < 6 ? "#b45309" : "#991b1b";
 
   return (
     <div style={{ overflowX: "auto" }}>
       <div style={{ display: "grid", gridTemplateColumns: `32px repeat(24, 1fr)`, gap: 2, minWidth: 500 }}>
         <div />
-        {hours.map(h => <div key={`hour-${h}`} style={{ fontSize: 9, color: "#64748b", textAlign: "center" }}>{h}</div>)}
+        {hours.map(h => <div key={h} style={{ fontSize: 9, color: "#64748b", textAlign: "center" }}>{h}</div>)}
         {days.map((day, di) => (
-          <Fragment key={day}>
-            <div style={{ fontSize: 10, color: "#94a3b8", display: "flex", alignItems: "center" }}>{day}</div>
+          <>
+            <div key={`d-${day}`} style={{ fontSize: 10, color: "#94a3b8", display: "flex", alignItems: "center" }}>{day}</div>
             {hours.map((_, hi) => (
-              <div key={`d${di}-h${hi}`} title={`${data[di][hi].toFixed(1)}% MAPE`}
+              <div key={hi} title={`${data[di][hi].toFixed(1)}% MAPE`}
                 style={{ height: 12, borderRadius: 2, background: colorOf(data[di][hi]) }} />
             ))}
-          </Fragment>
+          </>
         ))}
       </div>
     </div>
@@ -561,11 +348,11 @@ function RegionGridMap() {
   const [activeNode, setActiveNode] = useState<string | null>(null);
   const regionPositions = [
     { id: "north", cx: 200, cy: 120 },
-    { id: "west", cx: 120, cy: 230 },
+    { id: "west",  cx: 120, cy: 230 },
     { id: "south", cx: 200, cy: 320 },
-    { id: "east", cx: 320, cy: 220 },
+    { id: "east",  cx: 320, cy: 220 },
   ];
-  const edges: [string, string][] = [["north", "west"], ["north", "east"], ["west", "south"], ["east", "south"], ["north", "south"]];
+  const edges: [string, string][] = [["north","west"],["north","east"],["west","south"],["east","south"],["north","south"]];
   const posMap = Object.fromEntries(regionPositions.map(r => [r.id, r]));
 
   return (
@@ -655,7 +442,7 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
     return Array.from({ length: 20 }, (_, i) => {
       const r = rng();
       const status = r > 0.7 ? "warn" : r > 0.9 ? "critical" : "active";
-      const labels = ["DEL", "HR", "UP", "PB", "RJ", "MH", "GJ", "MP", "KA", "TN"];
+      const labels = ["DEL","HR","UP","PB","RJ","MH","GJ","MP","KA","TN"];
       return { id: i, status, label: `${labels[i % 10]}-${String(i + 1).padStart(2, "0")}` };
     });
   }, []);
@@ -671,7 +458,7 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
           <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: "-0.5px" }}>Grid<span style={{ color: "#06b6d4" }}>Cast</span></span>
         </div>
         <div style={{ display: "flex", gap: 32, fontSize: 13, color: "#94a3b8" }}>
-          {["Grid", "Problem", "Pipeline", "Impact", "Tech"].map(l => (
+          {["Grid","Problem","Pipeline","Impact","Tech"].map(l => (
             <span key={l} style={{ cursor: "pointer", transition: "color 0.2s" }}
               onMouseEnter={e => ((e.target as HTMLElement).style.color = "#e2e8f0")}
               onMouseLeave={e => ((e.target as HTMLElement).style.color = "#94a3b8")}>{l}</span>
@@ -719,7 +506,7 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
             <p style={{ color: "#94a3b8", lineHeight: 1.8, marginBottom: 18, fontSize: 15 }}>Traditional grids operate reactively — they respond to demand spikes after they happen, causing cascading failures, brownouts, and costly reserve dispatch.</p>
             <p style={{ color: "#94a3b8", lineHeight: 1.8, fontSize: 15 }}>Smart grids use real-time forecasting to anticipate load, balance renewable intermittency, and dispatch reserves precisely — slashing waste and carbon emissions by up to 30%.</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 36 }}>
-              {[["4.7B+", "People on global grids"], ["₹2T+", "India grid investment"], ["30%", "Reserve waste reducible"], ["0.716", "tCO₂/MWh India grid"]].map(([v, l]) => (
+              {[["4.7B+","People on global grids"],["₹2T+","India grid investment"],["30%","Reserve waste reducible"],["0.716","tCO₂/MWh India grid"]].map(([v,l]) => (
                 <div key={l} className="gc-card" style={{ padding: "18px 20px" }}>
                   <div style={{ fontSize: 22, fontWeight: 700, color: "#06b6d4", fontFamily: "JetBrains Mono, monospace" }}>{v}</div>
                   <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{l}</div>
@@ -755,12 +542,12 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
           {[
-            ["⚡", "Demand Volatility", "Load swings 15–40% within minutes during peak events, outpacing manual dispatch by 3–5×."],
-            ["☁", "Renewable Intermittency", "Solar and wind generation can drop 80% in minutes. Without forecasting, operators over-provision expensive reserves."],
-            ["📊", "Dispatch Inefficiency", "Without accurate 15-min forecasts, operators carry 20–30% excess reserve capacity at ₹8–12/unit hidden cost."],
-            ["🗄", "Data Quality Gaps", "SCADA telemetry drops, sensor drift, and holiday anomalies create gaps conventional models cannot bridge."],
-            ["🏗", "Infrastructure Stress", "Legacy transmission infrastructure carries 110–125% rated load during heatwaves, risking catastrophic failure."],
-            ["✅", "GridCast Solves This", "96-step autoregressive XGBoost + LSTM pipeline with automated anomaly detection and sub-3% MAPE on NRLDC data.", true],
+            ["⚡","Demand Volatility","Load swings 15–40% within minutes during peak events, outpacing manual dispatch by 3–5×."],
+            ["☁","Renewable Intermittency","Solar and wind generation can drop 80% in minutes. Without forecasting, operators over-provision expensive reserves."],
+            ["📊","Dispatch Inefficiency","Without accurate 15-min forecasts, operators carry 20–30% excess reserve capacity at ₹8–12/unit hidden cost."],
+            ["🗄","Data Quality Gaps","SCADA telemetry drops, sensor drift, and holiday anomalies create gaps conventional models cannot bridge."],
+            ["🏗","Infrastructure Stress","Legacy transmission infrastructure carries 110–125% rated load during heatwaves, risking catastrophic failure."],
+            ["✅","GridCast Solves This","96-step autoregressive XGBoost + LSTM pipeline with automated anomaly detection and sub-3% MAPE on NRLDC data.", true],
           ].map(([icon, title, desc, highlight]) => (
             <div key={String(title)} className="gc-card" style={{ padding: 28, ...(highlight ? { borderColor: "#06b6d4", background: "rgba(6,182,212,0.07)" } : {}) }}>
               <div style={{ fontSize: 26, marginBottom: 14 }}>{icon}</div>
@@ -779,7 +566,7 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
         </div>
         <div style={{ display: "flex", gap: 0, position: "relative", alignItems: "flex-start" }}>
           <div style={{ position: "absolute", top: 20, left: "calc(8.33% + 20px)", right: "calc(8.33% + 20px)", height: 1, background: "linear-gradient(90deg,#06b6d4,#0e7490,#06b6d4)", opacity: 0.4 }} />
-          {[["SC", "Scrape", "Selenium ETL from NLDC portal every 15 min"], ["EX", "Extract", "Parquet feature store with lag & calendar vars"], ["CL", "Clean", "Z-score anomaly detect + gap interpolation"], ["ML", "Train", "XGBoost + LSTM on 2-yr NRLDC data"], ["API", "Serve", "Flask REST · P95 latency <1ms"], ["UI", "Visualise", "Operator dashboard + company portal"]].map(([code, title, desc]) => (
+          {[["SC","Scrape","Selenium ETL from NLDC portal every 15 min"],["EX","Extract","Parquet feature store with lag & calendar vars"],["CL","Clean","Z-score anomaly detect + gap interpolation"],["ML","Train","XGBoost + LSTM on 2-yr NRLDC data"],["API","Serve","Flask REST · P95 latency <1ms"],["UI","Visualise","Operator dashboard + company portal"]].map(([code,title,desc]) => (
             <div key={code} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "0 8px" }}>
               <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(6,182,212,0.15)", border: "1.5px solid #06b6d4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: "#06b6d4", fontFamily: "JetBrains Mono, monospace", position: "relative", zIndex: 2 }}>{code}</div>
               <div style={{ fontWeight: 600, fontSize: 13, textAlign: "center" }}>{title}</div>
@@ -797,7 +584,7 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {[["Current Load", "42,180 MW", "#06b6d4"], ["Peak Forecast", "45,320 MW", "#f59e0b"], ["Model MAPE", "2.4%", "#10b981"], ["Last Updated", "14:30 IST", "#94a3b8"], ["API Status", "● LIVE", "#10b981"]].map(([label, val, color]) => (
+            {[["Current Load","42,180 MW","#06b6d4"],["Peak Forecast","45,320 MW","#f59e0b"],["Model MAPE","2.4%","#10b981"],["Last Updated","14:30 IST","#94a3b8"],["API Status","● LIVE","#10b981"]].map(([label,val,color]) => (
               <div key={String(label)} className="gc-card" style={{ padding: "14px 16px" }}>
                 <div style={{ fontSize: 10, color: "#64748b", marginBottom: 4 }}>{label}</div>
                 <div style={{ fontSize: 15, fontWeight: 600, color, fontFamily: "JetBrains Mono, monospace" }}>{val}</div>
@@ -823,7 +610,7 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
           <h2 style={{ fontSize: 38, fontWeight: 700, letterSpacing: "-1px" }}>Results that matter</h2>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, marginBottom: 56 }}>
-          {[["-30%", "Reserve capacity waste"], ["<3%", "24hr MAPE target"], ["96×", "Decisions per day"], ["<1ms", "API inference latency"]].map(([val, label]) => (
+          {[["-30%","Reserve capacity waste"],["<3%","24hr MAPE target"],["96×","Decisions per day"],["<1ms","API inference latency"]].map(([val,label]) => (
             <div key={String(label)} className="gc-card gc-card-glow" style={{ padding: 28, textAlign: "center" }}>
               <div style={{ fontSize: 34, fontWeight: 700, color: "#06b6d4", fontFamily: "JetBrains Mono, monospace" }}>{val}</div>
               <div style={{ fontSize: 13, color: "#64748b", marginTop: 8 }}>{label}</div>
@@ -839,7 +626,7 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
           <h2 style={{ fontSize: 38, fontWeight: 700, letterSpacing: "-1px" }}>Production-grade infrastructure</h2>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
-          {[["XGBoost", "Gradient-boosted forecasting with SHAP explainability. 96-step autoregressive rollout.", "#f59e0b"], ["Pandas / Parquet", "Feature store with lag, rolling stats, and calendar features. Sub-100ms load time.", "#06b6d4"], ["Flask REST API", "P95 latency <1ms. Joblib model serialization. Docker-ready deployment.", "#10b981"], ["Selenium ETL", "Automated NLDC data scraping every 15 minutes. Retry logic and gap filling.", "#a78bfa"], ["SVG Dashboard", "Pure SVG visualisations. Zero-dependency, works offline on operator terminals.", "#06b6d4"], ["LSTM (Planned)", "PyTorch sequence model for long-range patterns. Captures weekly seasonality across 96+ steps.", "#f59e0b"]].map(([title, desc, color]) => (
+          {[["XGBoost","Gradient-boosted forecasting with SHAP explainability. 96-step autoregressive rollout.","#f59e0b"],["Pandas / Parquet","Feature store with lag, rolling stats, and calendar features. Sub-100ms load time.","#06b6d4"],["Flask REST API","P95 latency <1ms. Joblib model serialization. Docker-ready deployment.","#10b981"],["Selenium ETL","Automated NLDC data scraping every 15 minutes. Retry logic and gap filling.","#a78bfa"],["SVG Dashboard","Pure SVG visualisations. Zero-dependency, works offline on operator terminals.","#06b6d4"],["LSTM (Planned)","PyTorch sequence model for long-range patterns. Captures weekly seasonality across 96+ steps.","#f59e0b"]].map(([title,desc,color]) => (
             <div key={String(title)} className="gc-card" style={{ padding: 24 }}>
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, marginBottom: 14 }} />
               <div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>
@@ -858,7 +645,7 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
           <button className="gc-btn gc-btn-ghost" style={{ fontSize: 15, padding: "14px 40px" }}>View on GitHub ↗</button>
         </div>
         <div style={{ marginTop: 52, color: "#334155", fontSize: 12, display: "flex", justifyContent: "center", gap: 28 }}>
-          {["GridCast v2.1", "MIT License", "© 2026 GridCast", "Built on NRLDC Open Data"].map(t => <span key={t}>{t}</span>)}
+          {["GridCast v2.1","MIT License","© 2026 GridCast","Built on NRLDC Open Data"].map(t => <span key={t}>{t}</span>)}
         </div>
       </section>
     </div>
@@ -869,7 +656,7 @@ function LandingPage({ onNavigate }: { onNavigate: (p: string) => void }) {
 // PAGE: LOGIN
 // ─────────────────────────────────────────────────────────────────────────────
 const DEMO_CREDS = {
-  admin: { email: "admin@gridcast.in", password: "demo1234" },
+  admin:   { email: "admin@gridcast.in",   password: "demo1234" },
   company: { email: "company@gridcast.in", password: "demo1234" },
 };
 
@@ -903,26 +690,12 @@ function LoginPage({ onNavigate }: { onNavigate: (p: string) => void }) {
 
   return (
     <div style={{ minHeight: "100vh", background: "#020f1a", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Space Grotesk, sans-serif", position: "relative", overflow: "hidden" }}>
-      <nav style={{ position: "absolute", top: 0, left: 0, right: 0, height: 62, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px", borderBottom: "1px solid rgba(6,182,212,0.15)", background: "rgba(2,15,26,0.84)", backdropFilter: "blur(8px)", zIndex: 4 }}>
-        <button onClick={() => onNavigate("landing")} style={{ background: "transparent", border: "none", color: "#e2e8f0", fontFamily: "inherit", cursor: "pointer", fontSize: 16, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f59e0b" }} />
-          Grid<span style={{ color: "#06b6d4" }}>Cast</span>
-        </button>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 12, color: "#64748b" }}>Secure Access Portal</span>
-          <button style={{ background: "transparent", border: "1px solid rgba(100,116,139,0.35)", borderRadius: 999, color: "#94a3b8", padding: "6px 12px", fontFamily: "inherit", fontSize: 12, cursor: "pointer" }}>Need Help</button>
-          <button onClick={() => onNavigate("landing")} className="gc-btn gc-btn-ghost" style={{ padding: "7px 14px", fontSize: 12 }}>
-            ← Back to Landing
-          </button>
-        </div>
-      </nav>
-
       {/* Background SVG */}
       <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.12 }} viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
         <defs><pattern id="lgrid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0L0 0 0 40" fill="none" stroke="#06b6d4" strokeWidth="0.5" /></pattern></defs>
         <rect width="1200" height="800" fill="url(#lgrid)" />
         {[200, 600, 1000].map(x => (
-          <polyline key={x} points={`${x},0 ${x - 20},200 ${x + 15},220 ${x - 10},400`} fill="none" stroke="#06b6d4" strokeWidth="1.5" style={{ animation: `gc-lightning ${3 + x / 400}s ${x / 600}s infinite` }} />
+          <polyline key={x} points={`${x},0 ${x-20},200 ${x+15},220 ${x-10},400`} fill="none" stroke="#06b6d4" strokeWidth="1.5" style={{ animation: `gc-lightning ${3 + x / 400}s ${x / 600}s infinite` }} />
         ))}
         {[150, 500, 850].map(x => (
           <g key={x} opacity="0.45">
@@ -1154,15 +927,11 @@ function CompanyDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const threeReady = useThreeJs();
   const [activeTab, setActiveTab] = useState("overview");
-  const [model, setModel] = useState<"xgboost" | "lstm">("xgboost");
-  const [horizon, setHorizon] = useState<"24h" | "48h" | "72h">("24h");
   const [selectedTask, setSelectedTask] = useState<number | null>(null);
   const [schedulerOpen, setSchedulerOpen] = useState(false);
   const [newTaskTime, setNewTaskTime] = useState("02:00");
   const [newTaskRegion, setNewTaskRegion] = useState("north");
   const [now, setNow] = useState("");
-
-  const { chartData, residualMatrix, savings, metrics, loading, error } = usePredictiveEngine(8.5, model, horizon);
 
   useThreeDashGrid(canvasRef, threeReady);
 
@@ -1177,8 +946,6 @@ function CompanyDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
   const co2Saved = savingsMWh * INDIA_GRID_EMISSION_FACTOR;
   const inrSaved = savingsMWh * INR_PER_KWH * 1000;
   const treesEquiv = Math.round(co2Saved * 45), homeEquiv = Math.round(co2Saved / 1.8);
-  const modelColor = model === "xgboost" ? "#22d3ee" : "#a78bfa";
-  const modelLabel = model === "xgboost" ? "XGBoost" : "LSTM";
 
   const kpiCards = [
     { label: "CO₂ Avoided (MTD)", value: (co2Saved / 12).toFixed(1), unit: "tCO₂", color: "#10b981", icon: "🌿", trend: "+8.2% vs last month" },
@@ -1186,20 +953,10 @@ function CompanyDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
     { label: "Cost Saved (MTD)", value: `₹${((inrSaved / 12) / 100000).toFixed(1)}L`, unit: "", color: "#f59e0b", icon: "💰", trend: "+9.5% vs last month" },
     { label: "Grid Carbon Intensity", value: "0.716", unit: "tCO₂/MWh", color: "#a78bfa", icon: "📊", trend: "CEA FY2022-23 baseline" },
     { label: "Renewable Share", value: "22", unit: "%", color: "#10b981", icon: "☀️", trend: "Target: 40% by 2027" },
-    {
-      label: "Forecast Accuracy",
-      value: metrics.mape !== null ? (100 - metrics.mape).toFixed(1) : "N/A",
-      unit: metrics.mape !== null ? "%" : "",
-      color: modelColor,
-      icon: "🎯",
-      trend:
-        metrics.mape !== null
-          ? `MAPE ${metrics.mape.toFixed(2)}% · ${horizon} · ${modelLabel}`
-          : `Awaiting ${modelLabel} ${horizon} metrics`,
-    },
+    { label: "Forecast Accuracy", value: "97.6", unit: "%", color: "#06b6d4", icon: "🎯", trend: "MAPE 2.4% · 24hr horizon" },
   ];
 
-  const NAV_ITEMS = [["📊", "Overview", "overview"], ["⚡", "Load Forecast", "forecast"], ["🌿", "Carbon Tracker", "carbon"], ["📅", "Schedule Optimizer", "schedule"], ["📄", "Reports", "reports"]];
+  const NAV_ITEMS = [["📊","Overview","overview"],["⚡","Load Forecast","forecast"],["🌿","Carbon Tracker","carbon"],["📅","Schedule Optimizer","schedule"],["📄","Reports","reports"]];
 
   return (
     <div style={{ minHeight: "100vh", background: "#020f1a", fontFamily: "Space Grotesk, sans-serif", color: "#e2e8f0", display: "flex" }}>
@@ -1239,45 +996,7 @@ function CompanyDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
                 <button key={id} onClick={() => setActiveTab(id)} style={{ padding: "6px 14px", borderRadius: 6, border: "none", background: activeTab === id ? "rgba(6,182,212,0.12)" : "transparent", color: activeTab === id ? "#06b6d4" : "#64748b", fontSize: 13, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s" }}>{icon} {label}</button>
               ))}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ display: "flex", gap: 4 }}>
-                {(["24h", "48h", "72h"] as ("24h" | "48h" | "72h")[]).map((h) => (
-                  <button
-                    key={h}
-                    onClick={() => setHorizon(h)}
-                    style={{
-                      padding: "4px 9px",
-                      borderRadius: 6,
-                      border: `1px solid ${horizon === h ? modelColor : "rgba(148,163,184,0.35)"}`,
-                      background: horizon === h ? `${modelColor}26` : "transparent",
-                      color: horizon === h ? modelColor : "#94a3b8",
-                      cursor: "pointer",
-                      fontSize: 11,
-                      fontFamily: "inherit",
-                    }}
-                  >
-                    {h}
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={() => setModel((m) => (m === "xgboost" ? "lstm" : "xgboost"))}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: 6,
-                  border: `1px solid ${modelColor}`,
-                  background: `${modelColor}20`,
-                  color: modelColor,
-                  fontSize: 11,
-                  cursor: "pointer",
-                  fontWeight: 700,
-                  fontFamily: "inherit",
-                }}
-              >
-                {modelLabel} ↕
-              </button>
-              {loading && <span style={{ fontSize: 11, color: "#f59e0b" }}>Refreshing model…</span>}
-              {error && <span style={{ fontSize: 11, color: "#fca5a5", maxWidth: 220, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{error}</span>}
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               {now && <span style={{ fontSize: 12, color: "#64748b", fontFamily: "JetBrains Mono, monospace" }}>{now} IST</span>}
               <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(6,182,212,0.2)", border: "1.5px solid #0e7490", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#06b6d4" }}>TC</div>
             </div>
@@ -1312,23 +1031,13 @@ function CompanyDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
                         <div style={{ fontWeight: 600, marginBottom: 2 }}>Today's Load Curve</div>
                         <div style={{ fontSize: 12, color: "#64748b" }}>Actual vs Forecast (MW) · 15-min intervals</div>
                       </div>
-                      <div style={{ fontSize: 11, color: "#10b981", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 6, padding: "4px 10px" }}>
-                        {metrics.mape !== null ? `MAPE ${metrics.mape.toFixed(2)}%` : "MAPE pending"}
-                      </div>
+                      <div style={{ fontSize: 11, color: "#10b981", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 6, padding: "4px 10px" }}>MAPE 2.4%</div>
                     </div>
-                    <PremiumCompanyForecastChart
-                      height={220}
-                      timestamps={chartData?.timestamps}
-                      actual={chartData?.actual}
-                      forecast={chartData?.forecast}
-                      optimized={chartData?.optimized}
-                      modelLabel={modelLabel}
-                      horizon={horizon}
-                    />
+                    <LoadChart height={180} />
                   </div>
                   <div className="gc-card" style={{ padding: 22 }}>
                     <div style={{ fontWeight: 600, marginBottom: 18 }}>CO₂ Equivalents Avoided</div>
-                    {[[`${treesEquiv.toLocaleString("en-IN")}`, "Trees grown for 10 yrs", "🌳", "#10b981"], [`${homeEquiv.toLocaleString("en-IN")}`, "Indian homes powered / yr", "🏠", "#06b6d4"], [`${(co2Saved / 2.31).toFixed(0)}`, "Cars off road for 1 yr", "🚗", "#f59e0b"], [`${(co2Saved * 0.1).toFixed(1)} t`, "Coal not burned", "🏭", "#a78bfa"]].map(([val, label, icon, color]) => (
+                    {[[`${treesEquiv.toLocaleString("en-IN")}`, "Trees grown for 10 yrs", "🌳", "#10b981"],[`${homeEquiv.toLocaleString("en-IN")}`, "Indian homes powered / yr", "🏠", "#06b6d4"],[`${(co2Saved / 2.31).toFixed(0)}`, "Cars off road for 1 yr", "🚗", "#f59e0b"],[`${(co2Saved * 0.1).toFixed(1)} t`, "Coal not burned", "🏭", "#a78bfa"]].map(([val, label, icon, color]) => (
                       <div key={String(label)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #0f1e2e" }}>
                         <span style={{ fontSize: 20 }}>{icon}</span>
                         <div style={{ flex: 1 }}>
@@ -1357,25 +1066,12 @@ function CompanyDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
             {/* FORECAST */}
             {activeTab === "forecast" && (
               <>
-                <div style={{ marginBottom: 24 }}>
-                  <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Load Forecast — {horizon.toUpperCase()} Ahead</h1>
-                  <p style={{ color: "#64748b", fontSize: 13 }}>
-                    {modelLabel} model · {chartData?.forecast?.length ?? 0} steps · {metrics.mape !== null ? `MAPE ${metrics.mape.toFixed(2)}%` : "MAPE pending"} · North NRLDC grid
-                  </p>
-                </div>
+                <div style={{ marginBottom: 24 }}><h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Load Forecast — 24hr Ahead</h1><p style={{ color: "#64748b", fontSize: 13 }}>XGBoost model · 96 steps · MAPE 2.4% · North NRLDC grid</p></div>
                 <div className="gc-card" style={{ padding: 24, marginBottom: 20 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}><div style={{ fontWeight: 600 }}>Company Load vs Grid Forecast</div><button className="gc-btn gc-btn-ghost" style={{ padding: "6px 14px", fontSize: 12 }}>↓ Export CSV</button></div>
-                  <PremiumCompanyForecastChart
-                    height={320}
-                    timestamps={chartData?.timestamps}
-                    actual={chartData?.actual}
-                    forecast={chartData?.forecast}
-                    optimized={chartData?.optimized}
-                    modelLabel={modelLabel}
-                    horizon={horizon}
-                  />
+                  <LoadChart height={220} />
                 </div>
-                <div className="gc-card" style={{ padding: 24 }}><div style={{ fontWeight: 600, marginBottom: 18 }}>Residual Error Heatmap (APE %)</div><ErrorHeatmap matrix={residualMatrix} /></div>
+                <div className="gc-card" style={{ padding: 24 }}><div style={{ fontWeight: 600, marginBottom: 18 }}>Residual Error Heatmap (APE %)</div><ErrorHeatmap /></div>
               </>
             )}
 
@@ -1384,19 +1080,19 @@ function CompanyDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
               <>
                 <div style={{ marginBottom: 24 }}><h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Carbon Footprint Tracker</h1><p style={{ color: "#64748b", fontSize: 13 }}>Scope 2 emissions · India CEA emission factor 0.716 tCO₂/MWh</p></div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20, marginBottom: 24 }}>
-                  {[["Annual CO₂ Footprint", `${(baseMW * 8760 * INDIA_GRID_EMISSION_FACTOR).toFixed(0)} tCO₂`, "Scope 2 grid electricity", "#ef4444"], ["CO₂ Avoided (YTD)", `${co2Saved.toFixed(0)} tCO₂`, "Through demand optimisation", "#10b981"], ["Carbon Intensity Now", "0.716 tCO₂/MWh", "India national grid avg · CEA", "#f59e0b"], ["Net Zero Target Gap", `${(baseMW * 8760 * INDIA_GRID_EMISSION_FACTOR - co2Saved).toFixed(0)} tCO₂`, "Remaining to neutralise", "#a78bfa"]].map(([label, val, sub, color]) => (
+                  {[["Annual CO₂ Footprint", `${(baseMW * 8760 * INDIA_GRID_EMISSION_FACTOR).toFixed(0)} tCO₂`, "Scope 2 grid electricity", "#ef4444"],["CO₂ Avoided (YTD)", `${co2Saved.toFixed(0)} tCO₂`, "Through demand optimisation", "#10b981"],["Carbon Intensity Now", "0.716 tCO₂/MWh", "India national grid avg · CEA", "#f59e0b"],["Net Zero Target Gap", `${(baseMW * 8760 * INDIA_GRID_EMISSION_FACTOR - co2Saved).toFixed(0)} tCO₂`, "Remaining to neutralise", "#a78bfa"]].map(([label, val, sub, color]) => (
                     <div key={String(label)} className="gc-kpi"><div style={{ fontSize: 11, color: "#64748b", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div><div style={{ fontSize: 26, fontWeight: 700, color, fontFamily: "JetBrains Mono, monospace" }}>{val}</div><div style={{ fontSize: 11, color: "#475569", marginTop: 4 }}>{sub}</div></div>
                   ))}
                 </div>
                 <div className="gc-card" style={{ padding: 24 }}>
                   <div style={{ fontWeight: 600, marginBottom: 18 }}>Monthly Carbon Trend (tCO₂)</div>
                   <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120 }}>
-                    {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((month, i) => {
+                    {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((month, i) => {
                       const target = baseMW * (i < 4 ? 730 : 720) * INDIA_GRID_EMISSION_FACTOR * (1 - i * 0.004);
                       const maxV = baseMW * 730 * INDIA_GRID_EMISSION_FACTOR;
                       return (
                         <div key={month} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                          <div style={{ width: "100%", height: `${(target / maxV) * 100}%`, borderRadius: "3px 3px 0 0", background: i <= 3 ? "linear-gradient(180deg,#06b6d4,#0e7490)" : "#1e3a4a" }} />
+                          <div style={{ width: "100%", height: `${(target/maxV)*100}%`, borderRadius: "3px 3px 0 0", background: i <= 3 ? "linear-gradient(180deg,#06b6d4,#0e7490)" : "#1e3a4a" }} />
                           <div style={{ fontSize: 9, color: "#475569" }}>{month}</div>
                         </div>
                       );
@@ -1436,7 +1132,7 @@ function CompanyDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
                               <div style={{ marginTop: 14, padding: 16, background: "rgba(6,182,212,0.04)", border: "1px solid rgba(6,182,212,0.15)", borderRadius: 8 }}>
                                 <div style={{ fontSize: 11, fontWeight: 700, color: "#06b6d4", letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Impact Analysis</div>
                                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-                                  {[[`${co2TaskSaved.toFixed(2)} tCO₂`, "Carbon saved / shift"], [`₹${costSaved.toFixed(0)}`, "Cost saved / shift"], [`${mwSaved.toFixed(1)} MWh`, "Energy shifted"]].map(([v, l]) => (
+                                  {[[`${co2TaskSaved.toFixed(2)} tCO₂`, "Carbon saved / shift"],[`₹${costSaved.toFixed(0)}`, "Cost saved / shift"],[`${mwSaved.toFixed(1)} MWh`, "Energy shifted"]].map(([v, l]) => (
                                     <div key={String(l)} style={{ textAlign: "center", background: "rgba(6,182,212,0.06)", borderRadius: 8, padding: "10px 8px" }}>
                                       <div style={{ fontWeight: 700, color: "#06b6d4", fontFamily: "JetBrains Mono", fontSize: 14 }}>{v}</div>
                                       <div style={{ fontSize: 10, color: "#64748b", marginTop: 3 }}>{l}</div>
@@ -1460,7 +1156,7 @@ function CompanyDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                     <div className="gc-card" style={{ padding: 20 }}>
                       <div style={{ fontWeight: 600, marginBottom: 16 }}>Total Optimizer Impact</div>
-                      {[["Annual CO₂ Saved", `${(co2Saved * 0.15).toFixed(1)} tCO₂`, "#10b981"], ["Annual Cost Saved", `₹${((inrSaved * 0.15) / 100000).toFixed(1)}L`, "#f59e0b"], ["Energy Shifted", `${(savingsMWh * 0.15).toFixed(0)} MWh`, "#06b6d4"], ["Peak Load Reduction", "14.2%", "#a78bfa"]].map(([label, val, color]) => (
+                      {[["Annual CO₂ Saved", `${(co2Saved * 0.15).toFixed(1)} tCO₂`, "#10b981"],["Annual Cost Saved", `₹${((inrSaved * 0.15)/100000).toFixed(1)}L`, "#f59e0b"],["Energy Shifted", `${(savingsMWh * 0.15).toFixed(0)} MWh`, "#06b6d4"],["Peak Load Reduction", "14.2%", "#a78bfa"]].map(([label, val, color]) => (
                         <div key={String(label)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #0f1e2e" }}>
                           <span style={{ fontSize: 12, color: "#64748b" }}>{label}</span>
                           <span style={{ fontSize: 14, fontWeight: 700, color, fontFamily: "JetBrains Mono" }}>{val}</span>
@@ -1520,7 +1216,7 @@ function CompanyDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
               <>
                 <div style={{ marginBottom: 24 }}><h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Reports & Compliance</h1><p style={{ color: "#64748b", fontSize: 13 }}>Download GHG inventory reports, BEE compliance summaries, and grid interaction logs.</p></div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
-                  {[["📊", "Monthly Energy Report", "April 2026 · PDF", "GHG inventory, load curve, savings summary"], ["🌿", "Scope 2 Carbon Report", "Q1 2026 · PDF", "CEA-compliant carbon accounting"], ["📋", "BEE PAT Compliance", "FY2025-26 · XLSX", "Bureau of Energy Efficiency PAT data"], ["⚡", "Grid Interaction Log", "April 23 · CSV", "15-min demand & export data"]].map(([icon, title, meta, desc]) => (
+                  {[["📊","Monthly Energy Report","April 2026 · PDF","GHG inventory, load curve, savings summary"],["🌿","Scope 2 Carbon Report","Q1 2026 · PDF","CEA-compliant carbon accounting"],["📋","BEE PAT Compliance","FY2025-26 · XLSX","Bureau of Energy Efficiency PAT data"],["⚡","Grid Interaction Log","April 23 · CSV","15-min demand & export data"]].map(([icon, title, meta, desc]) => (
                     <div key={String(title)} className="gc-card" style={{ padding: 22, display: "flex", gap: 16, alignItems: "flex-start", cursor: "pointer" }}>
                       <span style={{ fontSize: 26 }}>{icon}</span>
                       <div style={{ flex: 1 }}>
@@ -1545,306 +1241,168 @@ function CompanyDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
 // PAGE: ADMIN DASHBOARD (light theme — original HTML reference)
 // ─────────────────────────────────────────────────────────────────────────────
 function AdminDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
-  const [activeTab, setActiveTab] = useState<string>('forecast');
-  const [activeModel, setActiveModel] = useState<ModelType>('xgboost');
-  const [activeHorizon, setActiveHorizon] = useState<Horizon>('24h');
-  
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  const [xgboostData, setXgboostData] = useState<ForecastData | null>(null);
-  const [lstmData, setLstmData] = useState<ForecastData | null>(null);
-  const [residualData, setResidualData] = useState<ResidualData | null>(null);
+  const [model, setModel] = useState<"xgboost" | "lstm">("xgboost");
+  const [horizon, setHorizon] = useState("24h");
+  const [activeTab, setActiveTab] = useState("forecast");
 
-  useEffect(() => {
-    let mounted = true;
-    async function loadData() {
-      setLoading(true);
-      setError(null);
-      try {
-        const [xgb, lstm, res] = await Promise.all([
-          fetchForecastData('xgboost', activeHorizon),
-          fetchForecastData('lstm', activeHorizon),
-          fetchResidualData(activeModel)
-        ]);
-        if (mounted) {
-          setXgboostData(xgb);
-          setLstmData(lstm);
-          setResidualData(res);
-        }
-      } catch (err) {
-        console.error('Failed to load admin data:', err);
-        if (mounted) setError('Failed to sync with predictive engines.');
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-    loadData();
-    return () => { mounted = false; };
-  }, [activeHorizon, activeModel]);
+  // Deterministic "next 2 hours" values
+  const nextSlots = useMemo(() => {
+    const rng = seededRng(77);
+    return ["+00:15","+00:30","+00:45","+01:00","+01:15","+01:30","+01:45","+02:00"].map(t => ({
+      t, v: (42000 + Math.round((rng() - 0.5) * 800)).toLocaleString("en-IN"),
+    }));
+  }, []);
 
-  const currentData = activeModel === 'xgboost' ? xgboostData : lstmData;
-  const config = MODEL_CONFIGS[activeModel];
-  const modelColor = config.color;
-
-  if (error) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', color: '#dc2626' }}>
-        <div style={{ textAlign: 'center', padding: '40px', border: '1px solid #e2e8f0', borderRadius: '12px', background: 'white', boxShadow: '0 10px 25px rgba(0,0,0,0.05)' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>Connection Error</h2>
-          <p>{error}</p>
-          <button onClick={() => window.location.reload()} style={{ marginTop: '20px', padding: '10px 20px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Retry Sync</button>
-        </div>
-      </div>
-    );
-  }
+  const modelColor = model === "xgboost" ? "#378ADD" : "#7C3AED";
+  const modelLabel = model === "xgboost" ? "XGBoost" : "LSTM";
 
   return (
-    <div className="gc-admin-root" style={{ background: '#ffffff', minHeight: '100vh', color: '#1e293b', fontFamily: 'DM Sans, sans-serif' }}>
-      {/* Navbar */}
-      <nav style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', height: 52, display: 'flex', alignItems: 'center', padding: '0 24px', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 32 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#d97706' }} />
-          <span style={{ fontWeight: 800, fontSize: 16, color: '#003d99', letterSpacing: '-0.02em' }}>Grid<span style={{ color: '#003d99' }}>Cast</span> Admin</span>
+    <div className="gc-admin-root" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+      {/* Loading bar */}
+      <div style={{ height: 3, background: `linear-gradient(90deg, ${modelColor}, transparent)`, width: "65%" }} />
+
+      {/* Nav */}
+      <nav className="gc-admin-nav" style={{ padding: "0 24px", height: 52, display: "flex", alignItems: "center", gap: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginRight: 24 }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#f59e0b" }} />
+          <span style={{ fontWeight: 700, fontSize: 15 }}>Grid<span style={{ color: "#06b6d4" }}>Cast</span></span>
+          <span style={{ fontSize: 11, color: "#94a3b8", background: "#f1f5f9", borderRadius: 4, padding: "2px 6px", marginLeft: 4 }}>ADMIN</span>
         </div>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {['Forecast', 'Analysis', 'Models', 'Reports'].map(t => (
-            <button
-              key={t}
-              onClick={() => setActiveTab(t.toLowerCase())}
-              style={{
-                padding: '5px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 500, border: 'none', background: activeTab === t.toLowerCase() ? '#f0f4fb' : 'transparent', color: activeTab === t.toLowerCase() ? '#003d99' : '#64748b', cursor: 'pointer', transition: 'all 0.2s'
-              }}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
+        {["Forecast","Analysis","Models","Reports"].map(t => (
+          <button key={t} onClick={() => setActiveTab(t.toLowerCase())} style={{ padding: "0 16px", height: 52, border: "none", borderBottom: `2px solid ${activeTab === t.toLowerCase() ? modelColor : "transparent"}`, background: "transparent", fontFamily: "inherit", fontSize: 13, fontWeight: activeTab === t.toLowerCase() ? 600 : 400, color: activeTab === t.toLowerCase() ? modelColor : "#64748b", cursor: "pointer" }}>{t}</button>
+        ))}
         <div style={{ flex: 1 }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => onNavigate('login')} style={{ background: 'transparent', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '5px 12px', fontSize: '12px', color: '#64748b', cursor: 'pointer' }}>← Exit</button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {["24h","48h","72h"].map(h => (
+            <button key={h} onClick={() => setHorizon(h)} style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${horizon === h ? modelColor : "#e2e8f0"}`, background: horizon === h ? `${modelColor}18` : "transparent", color: horizon === h ? modelColor : "#64748b", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>{h}</button>
+          ))}
+          <div style={{ width: 1, height: 20, background: "#e2e8f0", margin: "0 6px" }} />
+          <button onClick={() => setModel(m => m === "xgboost" ? "lstm" : "xgboost")} style={{ padding: "4px 14px", borderRadius: 6, border: `1px solid ${modelColor}`, background: `${modelColor}18`, color: modelColor, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{modelLabel} ↕</button>
+          <div style={{ width: 28, height: 28, borderRadius: "50%", background: `${modelColor}25`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: modelColor }}>OP</div>
+          <button onClick={() => onNavigate("login")} style={{ background: "transparent", border: "1px solid #e2e8f0", borderRadius: 6, padding: "4px 12px", fontSize: 12, color: "#64748b", cursor: "pointer", fontFamily: "inherit" }}>← Exit</button>
         </div>
       </nav>
 
-      <div style={{ display: 'flex', height: 'calc(100vh - 52px)' }}>
+      <div style={{ display: "flex", height: "calc(100vh - 55px)" }}>
         {/* Sidebar */}
-        <aside style={{ width: 220, background: '#ffffff', borderRight: '1px solid #e2e8f0', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', letterSpacing: '.08em', textTransform: 'uppercase', padding: '8px 8px 4px' }}>Predictive Engine</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16 }}>
-            {(['xgboost', 'lstm'] as ModelType[]).map(m => (
-              <div
-                key={m}
-                onClick={() => setActiveModel(m)}
-                style={{
-                  height: 40, borderRadius: '8px', display: 'flex', alignItems: 'center', padding: '0 12px', gap: 10, fontSize: '13px', fontWeight: 600,
-                  cursor: 'pointer', transition: 'all 0.2s',
-                  background: activeModel === m ? '#f0f4fb' : 'transparent',
-                  color: activeModel === m ? '#003d99' : '#64748b',
-                  border: activeModel === m ? '1px solid #dbeafe' : '1px solid transparent'
-                }}
-              >
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: MODEL_CONFIGS[m].color }} />
-                <span>{MODEL_CONFIGS[m].name}</span>
-                {activeModel === m && <span style={{ marginLeft: 'auto', fontSize: '10px', background: '#dbeafe', padding: '2px 6px', borderRadius: '4px' }}>Active</span>}
-              </div>
-            ))}
-          </div>
-
-          <div style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', letterSpacing: '.08em', textTransform: 'uppercase', padding: '8px 8px 4px' }}>Forecast Horizon</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16 }}>
-            {(['24h', '48h', '72h'] as Horizon[]).map(h => (
-              <div
-                key={h}
-                onClick={() => setActiveHorizon(h)}
-                style={{
-                  height: 36, borderRadius: '8px', display: 'flex', alignItems: 'center', padding: '0 12px', gap: 10, fontSize: '13px', fontWeight: 500,
-                  cursor: 'pointer', transition: 'all 0.2s',
-                  background: activeHorizon === h ? '#f8fafc' : 'transparent',
-                  color: activeHorizon === h ? '#003d99' : '#64748b',
-                  border: activeHorizon === h ? '1px solid #e2e8f0' : '1px solid transparent'
-                }}
-              >
-                <span style={{ opacity: activeHorizon === h ? 1 : 0.5 }}>🕒</span>
-                <span>{h} Window</span>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', letterSpacing: '.08em', textTransform: 'uppercase', padding: '8px 8px 4px' }}>Regions</div>
+        <aside className="gc-admin-sidebar" style={{ width: 180, padding: 16, overflowY: "auto", flexShrink: 0 }}>
+          <div style={{ fontSize: 10, color: "#94a3b8", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>Regions</div>
           {REGIONS.map(r => (
-            <div
-              key={r.id}
-              style={{
-                height: 32, borderRadius: '7px', display: 'flex', alignItems: 'center', padding: '0 10px', gap: 8, fontSize: '13px', fontWeight: 500, color: r.id === 'north' ? '#003d99' : '#64748b', background: r.id === 'north' ? '#f0f4fb' : 'transparent', cursor: 'pointer'
-              }}
-            >
-              <div style={{ width: 7, height: 7, borderRadius: '50%', background: r.id === 'north' ? '#003d99' : '#cbd5e1' }} />
-              <span>{r.label.split(' ')[0]}</span>
+            <label key={r.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", cursor: "pointer", fontSize: 12 }}>
+              <input type="checkbox" defaultChecked={r.id === "north"} style={{ accentColor: r.color }} />
+              <span style={{ color: r.id === "north" ? r.color : "#64748b" }}>{r.label.split(" ")[0]}</span>
+              {r.id !== "north" && <span style={{ fontSize: 9, color: "#94a3b8", marginLeft: "auto" }}>Soon</span>}
+            </label>
+          ))}
+          <div style={{ height: 1, background: "#e2e8f0", margin: "16px 0" }} />
+          <div style={{ fontSize: 10, color: "#94a3b8", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>Models</div>
+          {[["XGBoost","xgboost" as const,"#378ADD"],["LSTM","lstm" as const,"#7C3AED"]].map(([label,val,color]) => (
+            <div key={String(val)} onClick={() => setModel(val as "xgboost"|"lstm")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", borderRadius: 6, cursor: "pointer", background: model === val ? `${color}12` : "transparent", marginBottom: 4 }}>
+              <span style={{ fontSize: 12, color: model === val ? color : "#64748b" }}>{label}</span>
+              {model === val && <span style={{ fontSize: 9, background: `${color}22`, color, padding: "2px 6px", borderRadius: 4 }}>Active</span>}
             </div>
           ))}
+          <div style={{ height: 1, background: "#e2e8f0", margin: "16px 0" }} />
+          <div style={{ background: `${modelColor}0a`, border: `1px solid ${modelColor}30`, borderRadius: 8, padding: "10px 12px", fontSize: 11 }}>
+            <div style={{ color: modelColor, fontWeight: 600, marginBottom: 4 }}>Active Region</div>
+            <div style={{ color: "#1e293b" }}>North NRLDC</div>
+            <div style={{ color: "#94a3b8" }}>15-min resolution</div>
+          </div>
         </aside>
 
-        {/* Main Content */}
-        <main style={{ flex: 1, overflowY: 'auto', padding: '24px', background: '#f8fafc' }}>
-          {activeTab === 'forecast' && (
-            <>
-              {/* KPIs */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
-                {[
-                  { label: 'Accuracy MAPE', value: loading ? '...' : `${currentData?.horizon_metrics[activeHorizon]?.mape?.toFixed(2) ?? '--'}%`, icon: '🎯', color: (currentData?.horizon_metrics[activeHorizon]?.mape ?? 10) < 3 ? '#059669' : '#d97706' },
-                  { label: 'Predicted Peak', value: loading ? '...' : `${Math.max(...(currentData?.forecast.map(p => p.load_mw) ?? [0])).toLocaleString()} MW`, icon: '📈', color: '#003d99' },
-                  { label: 'Engine Latency', value: '1.2s', icon: '⚡', color: '#64748b' },
-                  { label: 'Last Sync', value: loading ? '...' : currentData ? new Date(currentData.generated_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '--', icon: '🔄', color: '#003d99' }
-                ].map(k => (
-                  <div key={k.label} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>{k.label}</span>
-                      <span>{k.icon}</span>
-                    </div>
-                    <div style={{ fontSize: '20px', fontWeight: 700, color: k.color, fontFamily: 'JetBrains Mono' }}>{k.value}</div>
-                  </div>
-                ))}
+        {/* Main */}
+        <main style={{ flex: 1, overflowY: "auto", padding: 20, background: "#f8fafc" }}>
+          <div style={{ background: `${modelColor}0e`, border: `1px solid ${modelColor}40`, borderRadius: 8, padding: "8px 16px", marginBottom: 16, display: "flex", gap: 12, alignItems: "center", fontSize: 12 }}>
+            <span className="gc-led" style={{ background: modelColor, boxShadow: `0 0 6px ${modelColor}` }} />
+            <span style={{ color: modelColor, fontWeight: 600 }}>{modelLabel} Active</span>
+            <span style={{ color: "#64748b" }}>·</span>
+            <span style={{ color: "#64748b" }}>Data through April 23, 2026 · {horizon} horizon</span>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 16 }}>
+            {[["MAPE 24h","2.4%","#10b981"],["MAPE 48h","3.1%","#f59e0b"],["MAPE 72h","4.2%","#ef4444"],["Avg MAE 24h","342 MW","#64748b"],["Pred. Peak","45,320 MW",modelColor],["Forecast From","Apr 23",modelColor]].map(([label,val,color]) => (
+              <div key={String(label)} className="gc-admin-card" style={{ padding: "12px 14px" }}>
+                <div style={{ fontSize: 10, color: "#94a3b8", marginBottom: 4 }}>{label}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color, fontFamily: "JetBrains Mono, monospace" }}>{val}</div>
               </div>
+            ))}
+          </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 0.6fr', gap: '20px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <ForecastChart data={currentData} model={activeModel} loading={loading} />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <ModelComparison xgboostData={xgboostData} lstmData={lstmData} horizon={activeHorizon} loading={loading} />
-                  <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', flex: 1 }}>
-                    <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', color: '#003d99' }}>Status Log</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <div style={{ padding: '10px', background: '#ecfdf5', border: '1px solid #d1fae5', borderRadius: '8px', fontSize: '12px' }}>
-                        <span style={{ color: '#059669', fontWeight: 700 }}>● {activeModel.toUpperCase()} Stable</span>
-                        <p style={{ color: '#64748b', marginTop: '2px' }}>Latest forecast successfully generated.</p>
-                      </div>
-                      <div style={{ padding: '10px', background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '8px', fontSize: '12px' }}>
-                        <span style={{ color: '#d97706', fontWeight: 700 }}>⚠ Peak Alert</span>
-                        <p style={{ color: '#64748b', marginTop: '2px' }}>Predicted peak within 95% of capacity.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: '20px' }}>
-                <ResidualHeatmap data={residualData} loading={loading} />
-              </div>
-            </>
-          )}
-
-          {activeTab === 'analysis' && (
-            <div style={{ animation: 'fadeIn 0.3s ease' }}>
-              <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#003d99', letterSpacing: '-0.5px' }}>Load Analysis — North Region</h2>
-                <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Operational analysis summary for current forecast cycle</p>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', color: '#003d99' }}>Error Pattern Insights</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ display: 'flex', gap: '10px', fontSize: '13px', color: '#475569' }}>
-                      <span style={{ color: '#003d99' }}>•</span>
-                      <span>Morning transition slots show higher variance than mid-day.</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px', fontSize: '13px', color: '#475569' }}>
-                      <span style={{ color: '#003d99' }}>•</span>
-                      <span>Weekday peaks remain more stable than weekend peaks.</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px', fontSize: '13px', color: '#475569' }}>
-                      <span style={{ color: '#003d99' }}>•</span>
-                      <span>Backtest heatmap remains primary source for slot-level reliability.</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', color: '#003d99' }}>Operational Notes</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ display: 'flex', gap: '10px', fontSize: '13px', color: '#475569' }}>
-                      <span style={{ color: '#003d99' }}>•</span>
-                      <span>Monitor high-demand windows around peak ramp-up hours.</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px', fontSize: '13px', color: '#475569' }}>
-                      <span style={{ color: '#003d99' }}>•</span>
-                      <span>Cross-check abnormal spikes with weather and holiday signals.</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px', fontSize: '13px', color: '#475569' }}>
-                      <span style={{ color: '#003d99' }}>•</span>
-                      <span>Re-run training after material demand pattern shifts.</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'models' && (
-            <div style={{ animation: 'fadeIn 0.3s ease' }}>
-              <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#003d99', letterSpacing: '-0.5px' }}>Model Stack</h2>
-                <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Status and readiness of forecasting pipelines</p>
-              </div>
-
-              <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9' }}>
-                  <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#003d99' }}>Model Readiness Matrix</h3>
-                </div>
-                <div>
-                  {[
-                    { name: 'XGBoost', type: 'Production model · Season-aware features', color: '#4c79b8', status: 'Active', statusColor: '#ecfdf5', textColor: '#059669' },
-                    { name: 'LSTM', type: 'Sequence model · Direct multi-step output · Bidirectional', color: '#7C3AED', status: 'Active', statusColor: '#f5f3ff', textColor: '#7C3AED' },
-                    { name: 'Linear Regression', type: 'Baseline benchmark for drift checks', color: '#10b981', status: 'Baseline', statusColor: '#f8fafc', textColor: '#64748b' }
-                  ].map((m, i) => (
-                    <div key={m.name} style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: i === 2 ? 'none' : '1px solid #f1f5f9' }}>
-                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: m.color, marginRight: '16px' }} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{m.name}</div>
-                        <div style={{ fontSize: '12px', color: '#94a3b8' }}>{m.type}</div>
-                      </div>
-                      <div style={{ padding: '4px 10px', background: m.statusColor, borderRadius: '20px', fontSize: '11px', fontWeight: 700, color: m.textColor, border: `1px solid ${m.textColor}20` }}>
-                        {m.status}
-                      </div>
-                    </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 240px", gap: 16, marginBottom: 16 }}>
+            <div className="gc-admin-card" style={{ padding: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>Grid Load Forecast — North Region</div>
+                <div style={{ display: "flex", gap: 4 }}>
+                  {["24h","48h","72h"].map(h => (
+                    <button key={h} onClick={() => setHorizon(h)} style={{ padding: "3px 10px", borderRadius: 4, border: `1px solid ${horizon === h ? modelColor : "#e2e8f0"}`, background: horizon === h ? `${modelColor}18` : "transparent", color: horizon === h ? modelColor : "#94a3b8", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>{h}</button>
                   ))}
                 </div>
               </div>
-            </div>
-          )}
-
-          {activeTab === 'reports' && (
-            <div style={{ animation: 'fadeIn 0.3s ease' }}>
-              <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#003d99', letterSpacing: '-0.5px' }}>Reports</h2>
-                <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Generated artifacts and export-ready summaries</p>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', color: '#003d99' }}>Forecast Reporting</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ fontSize: '13px', color: '#475569' }}>• Daily forecast snapshot with peak/trough summary.</div>
-                    <div style={{ fontSize: '13px', color: '#475569' }}>• Weekly accuracy digest for stakeholder review.</div>
-                    <div style={{ fontSize: '13px', color: '#475569' }}>• CSV export available from Forecast tab.</div>
-                  </div>
-                  <button style={{ marginTop: '20px', width: '100%', padding: '10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', fontWeight: 600, color: '#475569', cursor: 'pointer' }}>Generate Full Digest</button>
-                </div>
-
-                <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', color: '#003d99' }}>Model Governance</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ fontSize: '13px', color: '#475569' }}>• Log model performance against rolling benchmarks.</div>
-                    <div style={{ fontSize: '13px', color: '#475569' }}>• Maintain retraining notes and data coverage updates.</div>
-                    <div style={{ fontSize: '13px', color: '#475569' }}>• Use residual heatmap trends for exception reporting.</div>
-                  </div>
-                  <button style={{ marginTop: '20px', width: '100%', padding: '10px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '12px', fontWeight: 600, color: '#475569', cursor: 'pointer' }}>View Compliance Log</button>
-                </div>
+              <LoadChart height={200} />
+              <div style={{ display: "flex", gap: 16, marginTop: 10, fontSize: 11, color: "#94a3b8" }}>
+                <span>— Actual</span>
+                <span style={{ color: modelColor }}>— Forecast ({modelLabel})</span>
+                <span>▥ ±5% CI</span>
               </div>
             </div>
-          )}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div className="gc-admin-card" style={{ padding: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 12 }}>Model Comparison</div>
+                {([["XGBoost",2.4,"#378ADD"],["LSTM",3.1,"#7C3AED"],["Linear Baseline",8.7,"#94a3b8"]] as [string,number,string][]).map(([name,mape,color]) => (
+                  <div key={String(name)} style={{ marginBottom: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
+                      <span style={{ color: "#64748b" }}>{name}</span>
+                      <span style={{ color, fontFamily: "JetBrains Mono", fontWeight: 700 }}>{mape}%</span>
+                    </div>
+                    <div style={{ background: "#f1f5f9", borderRadius: 3, height: 5 }}>
+                      <div style={{ width: `${(1 - (mape as number) / 10) * 100}%`, height: 5, borderRadius: 3, background: color as string }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="gc-admin-card" style={{ padding: 16, flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 12 }}>Forecast Alerts</div>
+                {[["✓","#10b981","Forecast loaded successfully"],["⚠","#f59e0b","Data gap May–Jul 2024"],["ℹ","#378ADD","Holiday pattern applied"]].map(([icon,color,msg]) => (
+                  <div key={String(msg)} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 10, fontSize: 11 }}>
+                    <span style={{ color, fontWeight: 700, flexShrink: 0 }}>{icon}</span>
+                    <span style={{ color: "#64748b" }}>{msg}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16 }}>
+            <div className="gc-admin-card" style={{ padding: 20 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 16 }}>Residual Error Heatmap — APE by Slot</div>
+              <ErrorHeatmap />
+              <div style={{ display: "flex", gap: 12, marginTop: 12, fontSize: 11, color: "#94a3b8", flexWrap: "wrap" }}>
+                {[["#064e3b","<1.5%"],["#065f46","1.5–3%"],["#ca8a04","3–4.5%"],["#b45309","4.5–6%"],["#991b1b",">6%"]].map(([color,label]) => (
+                  <span key={String(label)} style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: 2, background: color as string, display: "inline-block" }} />{label}</span>
+                ))}
+              </div>
+            </div>
+            <div className="gc-admin-card" style={{ padding: 20 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 16 }}>Peak Summary</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 18 }}>
+                {[["Pred. Peak","45,320 MW"],["Pred. Trough","38,140 MW"],["Avg MAPE","2.4%"],["Model Trained","Apr 20"]].map(([label,val]) => (
+                  <div key={String(label)} style={{ background: "#f8fafc", borderRadius: 6, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 10, color: "#94a3b8" }}>{label}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, fontFamily: "JetBrains Mono", color: "#1e293b" }}>{val}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", marginBottom: 10, letterSpacing: 1, textTransform: "uppercase" }}>Next 2 Hours</div>
+              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "6px 12px", fontSize: 11 }}>
+                {nextSlots.map(({ t, v }) => (
+                  <>
+                    <span key={`t-${t}`} style={{ color: "#94a3b8", fontFamily: "JetBrains Mono" }}>{t}</span>
+                    <span key={`v-${t}`} style={{ color: modelColor, fontWeight: 600, fontFamily: "JetBrains Mono" }}>{v} MW</span>
+                  </>
+                ))}
+              </div>
+            </div>
+          </div>
         </main>
       </div>
     </div>
@@ -1860,22 +1418,13 @@ export default function GridCastApp() {
   const [page, setPage] = useState<Page>("landing");
   const navigate = useCallback((p: string) => setPage(p as Page), []);
 
-  // Simple session detection for demo purposes
-  useEffect(() => {
-    // Check if we have a session cookie or redirected from login
-    const hasSession = document.cookie.includes('gridcast-session=admin');
-    if (hasSession && page === 'landing') {
-      setPage('admin-dashboard');
-    }
-  }, []);
-
   return (
     <div style={{ minHeight: "100vh" }}>
-      {page === "landing" && <LandingPage onNavigate={navigate} />}
-      {page === "login" && <LoginPage onNavigate={navigate} />}
-      {page === "company-form" && <CompanyFormPage onNavigate={navigate} />}
+      {page === "landing"           && <LandingPage    onNavigate={navigate} />}
+      {page === "login"             && <LoginPage       onNavigate={navigate} />}
+      {page === "company-form"      && <CompanyFormPage onNavigate={navigate} />}
       {page === "company-dashboard" && <CompanyDashboard onNavigate={navigate} />}
-      {page === "admin-dashboard" && <AdminDashboard onNavigate={navigate} />}
+      {page === "admin-dashboard"   && <AdminDashboard  onNavigate={navigate} />}
     </div>
   );
 }
