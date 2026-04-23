@@ -304,42 +304,24 @@ export default function AdminDashboard() {
 
                 <div className="space-y-6">
                   {/* Model Comparison - CRITICAL: Shows both errors */}
-                  <div className="bg-black/30 backdrop-blur-xl rounded-3xl p-8 border border-white/5 shadow-2xl">
+                  <div className="bg-black/30 backdrop-blur-xl rounded-3xl border border-white/5 shadow-2xl">
                     <ModelComparison 
                       xgboostData={xgboostData} 
                       lstmData={lstmData} 
                       horizon={activeHorizon}
-                      loading={loading} 
+                      loading={loading}
+                      status={{
+                        type: 'stable',
+                        message: 'Latest forecast successfully generated. MAPE variance within optimal bounds.',
+                        engine: 'XGBOOST'
+                      }}
                     />
-                  </div>
-
-                  {/* Operational Alerts */}
-                  <div className="bg-black/30 backdrop-blur-xl rounded-3xl p-8 border border-white/5 shadow-2xl">
-                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                      <Bell size={18} className="text-cyan-400" /> Engine Alerts
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="flex gap-3 p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
-                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-1.5" />
-                        <div>
-                          <p className="text-sm font-bold text-cyan-400">Forecast Synced</p>
-                          <p className="text-[11px] text-white/50">Successfully fetched {activeHorizon} matrix for {activeModel}.</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5" />
-                        <div>
-                          <p className="text-sm font-bold text-amber-400">Peak Load Warning</p>
-                          <p className="text-[11px] text-white/50">Approaching seasonal peak in next 4 hours. MAPE variance may increase.</p>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Heatmap Section */}
-              <div className="mt-8">
+              <div className="mt-4">
                 <div className="bg-black/30 backdrop-blur-xl rounded-3xl p-8 border border-white/5 shadow-2xl">
                    <ResidualHeatmap data={residualData} loading={loading} />
                 </div>
