@@ -16,9 +16,22 @@ import {
   Calendar,
   ArrowRight,
   TrendingUp,
+  TrendingDown,
   Cpu,
   Activity,
-  ArrowDown
+  ArrowDown,
+  DownloadCloud,
+  FileSearch,
+  Filter,
+  Server,
+  Eye,
+  Settings,
+  Code2,
+  Box,
+  Layers,
+  LineChart,
+  HardDrive,
+  Target
 } from "lucide-react";
 
 const HeroCanvas = dynamic(() => import("@/components/three/HeroCanvas"), {
@@ -651,15 +664,15 @@ export default function LandingPage() {
             />
 
             {[
-              ["SC", "Scrape", "Selenium ETL from NLDC portal every 15 min"],
-              ["EX", "Extract", "Parquet feature store with lag & calendar features"],
-              ["CL", "Clean", "Z-score anomaly detection + gap interpolation"],
-              ["ML", "Train", "XGBoost + LSTM on 2-year NRLDC data"],
-              ["API", "Serve", "Flask REST endpoint — P95 latency <1ms"],
-              ["UI", "Visualize", "Operator dashboard for grid intelligence"],
-            ].map(([code, title, desc]) => (
+              [<DownloadCloud key="sc" size={16} />, "Scrape", "Selenium ETL from NLDC portal every 15 min"],
+              [<FileSearch key="ex" size={16} />, "Extract", "Parquet feature store with lag & calendar features"],
+              [<Filter key="cl" size={16} />, "Clean", "Z-score anomaly detection + gap interpolation"],
+              [<Cpu key="ml" size={16} />, "Train", "XGBoost + LSTM on 2-year NRLDC data"],
+              [<Server key="api" size={16} />, "Serve", "Flask REST endpoint — P95 latency <1ms"],
+              [<Eye key="ui" size={16} />, "Visualize", "Operator dashboard for grid intelligence"],
+            ].map(([icon, title, desc]) => (
               <div
-                key={code}
+                key={title as string}
                 className="gc-reveal"
                 style={{
                   flex: 1,
@@ -689,7 +702,7 @@ export default function LandingPage() {
                     zIndex: 2,
                   }}
                 >
-                  {code}
+                  {icon}
                 </div>
                 <div style={{ fontWeight: 600, fontSize: 13 }}>{title}</div>
                 <div
@@ -883,16 +896,17 @@ export default function LandingPage() {
             }}
           >
             {[
-              ["-30%", "Reserve capacity waste"],
-              ["<3%", "24hr MAPE target"],
-              ["96×", "Decisions per day"],
-              ["<1ms", "API inference latency"],
-            ].map(([val, label]) => (
+              ["-30%", "Reserve capacity waste", <TrendingDown key="td" size={20} />],
+              ["<3%", "24hr MAPE target", <Target key="tg" size={20} />],
+              ["96×", "Decisions per day", <Zap key="zp" size={20} />],
+              ["<1ms", "API inference latency", <Activity key="ac" size={20} />],
+            ].map(([val, label, icon]) => (
               <div
-                key={label}
+                key={label as string}
                 className="gc-card gc-reveal"
                 style={{ textAlign: "center", padding: "28px 16px" }}
               >
+                <div style={{ color: "var(--gc-cyan)", marginBottom: 12, display: "flex", justifyContent: "center" }}>{icon}</div>
                 <div
                   style={{
                     fontSize: 32,
@@ -1015,47 +1029,52 @@ export default function LandingPage() {
                 "XGBoost",
                 "Gradient-boosted forecasting with SHAP explainability. 96-step autoregressive rollout.",
                 "var(--gc-amber)",
+                <TrendingUp key="xgb" size={18} />
               ],
               [
                 "Pandas / Parquet",
                 "Feature store with lag, rolling stats, and calendar features. Sub-100ms load time.",
                 "var(--gc-cyan)",
+                <HardDrive key="pd" size={18} />
               ],
               [
                 "Flask REST API",
                 "P95 latency <1ms. Joblib model serialization. Docker-ready deployment.",
                 "var(--gc-green)",
+                <Server key="flask" size={18} />
               ],
               [
                 "Selenium ETL",
                 "Automated NLDC scraping every 15 minutes. Handles auth, retry logic and pagination.",
                 "var(--gc-violet)",
+                <Code2 key="sel" size={18} />
               ],
               [
                 "React / Next.js",
                 "Pure SVG + Three.js visualizations. Operator dashboard with real-time data binding.",
                 "var(--gc-cyan)",
+                <Layers key="react" size={18} />
               ],
               [
                 "LSTM (Planned)",
                 "PyTorch sequence model for long-range patterns. Captures weekly seasonality across 96+ steps.",
                 "var(--gc-amber)",
+                <Cpu key="lstm" size={18} />
               ],
-            ].map(([title, desc, color]) => (
+            ].map(([title, desc, color, icon]) => (
               <div
-                key={title}
+                key={title as string}
                 className="gc-card gc-reveal"
                 style={{ padding: 22 }}
               >
                 <div
                   style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: color,
+                    color: color as string,
                     marginBottom: 12,
                   }}
-                />
+                >
+                  {icon}
+                </div>
                 <div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>
                 <div
                   style={{
