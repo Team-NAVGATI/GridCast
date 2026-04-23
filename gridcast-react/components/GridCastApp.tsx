@@ -48,7 +48,9 @@ import {
   Code2,
   Box,
   TrendingDown,
-  HardDrive
+  HardDrive,
+  Cloud,
+  Cpu
 } from "lucide-react";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
