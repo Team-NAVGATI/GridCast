@@ -10,9 +10,15 @@ export interface ForecastPoint {
 }
 
 export interface HorizonMetrics {
-  mae: number;
-  rmse: number;
-  mape: number;
+  mae: number | null;
+  rmse: number | null;
+  mape: number | null;
+}
+
+export interface MetricsData {
+  trained_at: string;
+  data_end: string;
+  horizon_metrics: Partial<Record<Horizon, HorizonMetrics>>;
 }
 
 export interface ForecastData {
@@ -23,11 +29,7 @@ export interface ForecastData {
   horizon: Horizon;
   horizon_h: number;
   steps: number;
-  horizon_metrics: {
-    '24h': HorizonMetrics;
-    '48h': HorizonMetrics;
-    '72h': HorizonMetrics;
-  };
+  horizon_metrics: Partial<Record<Horizon, HorizonMetrics>>;
   forecast: ForecastPoint[];
 }
 

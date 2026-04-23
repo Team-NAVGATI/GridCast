@@ -27,17 +27,24 @@ export function ForecastChart({ data, model, loading }: ForecastChartProps) {
           sparkline: { enabled: false },
         },
         series: [],
-        xaxis: { categories: [] },
+        xaxis: { type: 'datetime' as const },
       };
     }
 
-    // Prepare data
-    const dates = data.forecast.map((p) => p.datetime);
-    const values = data.forecast.map((p) => p.load_mw);
+    const seriesData = data.forecast.map(p => ({
+      x: new Date(p.datetime).getTime(),
+      y: p.load_mw
+    }));
 
-    // Calculate confidence bands (±5%)
-    const upper = values.map((v) => v * 1.05);
-    const lower = values.map((v) => v * 0.95);
+    const upperBand = data.forecast.map(p => ({
+      x: new Date(p.datetime).getTime(),
+      y: p.load_mw * 1.05
+    }));
+
+    const lowerBand = data.forecast.map(p => ({
+      x: new Date(p.datetime).getTime(),
+      y: p.load_mw * 0.95
+    }));
 
     return {
       chart: {
@@ -57,93 +64,35 @@ export function ForecastChart({ data, model, loading }: ForecastChartProps) {
         sparkline: { enabled: false },
         background: 'transparent',
         fontFamily: 'DM Sans, sans-serif',
+        animations: { enabled: true, easing: 'easeinout', speed: 800 },
       },
       series: [
         {
           name: `${config.name} Forecast`,
-          data: values,
-          type: 'line',
+          data: seriesData,
           color: config.color,
-          stroke: {
-            width: 2.5,
-            curve: 'smooth',
-          },
-          fill: {
-            type: 'gradient',
-            gradient: {
-              shadeIntensity: 0.1,
-              opacityFrom: 0.3,
-              opacityTo: 0,
-              stops: [0, 100],
-              colorStops: [
-                {
-                  offset: 0,
-                  color: config.color,
-                  opacity: 0.3,
-                },
-                {
-                  offset: 100,
-                  color: config.color,
-                  opacity: 0,
-                },
-              ],
-            },
-          },
-          tooltip: {
-            enabled: true,
-          },
         },
         {
           name: 'Upper Band (±5%)',
-          data: upper,
-          type: 'line',
+          data: upperBand,
           color: 'rgba(79, 172, 254, 0)',
-          stroke: {
-            width: 0,
-            dashArray: 3,
-          },
-          fill: {
-            type: 'gradient',
-            opacity: 0.15,
-            gradient: {
-              shadeIntensity: 0,
-              opacityFrom: 0,
-              opacityTo: 0,
-            },
-          },
-          tooltip: { enabled: false },
         },
         {
           name: 'Lower Band (±5%)',
-          data: lower,
-          type: 'line',
+          data: lowerBand,
           color: 'rgba(79, 172, 254, 0)',
-          stroke: {
-            width: 0,
-            dashArray: 3,
-          },
-          fill: {
-            type: 'gradient',
-            opacity: 0.15,
-            gradient: {
-              shadeIntensity: 0,
-              opacityFrom: 0,
-              opacityTo: 0,
-            },
-          },
-          tooltip: { enabled: false },
         },
       ],
+      stroke: {
+        width: [3, 0, 0],
+        curve: 'smooth' as const,
+        dashArray: [0, 4, 4]
+      },
       xaxis: {
-        categories: dates,
+        type: 'datetime' as const,
         labels: {
-          formatter: (val: string) => {
-            const date = new Date(val);
-            return date.toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-            });
-          },
+          datetimeUTC: false,
+          format: 'HH:mm',
           style: {
             fontSize: '11px',
             colors: '#94a3b8',
@@ -151,7 +100,6 @@ export function ForecastChart({ data, model, loading }: ForecastChartProps) {
         },
         axisBorder: { show: true, color: '#e2e8f0' },
         axisTicks: { show: false },
-        type: 'category' as const,
       },
       yaxis: {
         title: {
@@ -176,13 +124,10 @@ export function ForecastChart({ data, model, loading }: ForecastChartProps) {
         enabled: true,
         theme: 'dark',
         x: {
-          formatter: (val: any) => {
-            const date = new Date(val);
-            return date.toLocaleString('en-US');
-          },
+          format: 'dd MMM yyyy, HH:mm',
         },
         y: {
-          formatter: (val: number) => Math.round(val) + ' MW',
+          formatter: (val: number) => Math.round(val).toLocaleString() + ' MW',
         },
         style: {
           fontSize: '12px',
@@ -202,16 +147,8 @@ export function ForecastChart({ data, model, loading }: ForecastChartProps) {
         fontSize: '12px',
         fontFamily: 'DM Sans, sans-serif',
       },
-      responsive: [
-        {
-          breakpoint: 1024,
-          options: {
-            chart: { height: 300 },
-          },
-        },
-      ],
     };
-  }, [data, model, config]);
+  }, [data, config]);
 
   if (loading) {
     return (
@@ -230,13 +167,13 @@ export function ForecastChart({ data, model, loading }: ForecastChartProps) {
   }
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 shadow-sm">
-      <div className="mb-2">
-        <h3 className="text-13px font-semibold text-[#003d99]">
+    <div className="bg-white border border-[#e2e8f0] rounded-lg p-5 shadow-sm">
+      <div className="mb-5 px-1">
+        <h3 className="text-14px font-bold text-[#003d99] tracking-tight">
           Forecast: {data.horizon} Ahead
         </h3>
-        <p className="text-11px text-[#94a3b8] mt-0.5">
-          Generated: {new Date(data.generated_at).toLocaleString()}
+        <p className="text-11px text-[#94a3b8] font-medium mt-1">
+          Engine Sync: {new Date(data.generated_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
       <Chart
