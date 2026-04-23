@@ -1039,7 +1039,7 @@ function CompanyFormPage({ onNavigate }: { onNavigate: (p: string) => void }) {
                 <div><label className="gc-label">Employees</label><input style={inputSt} type="number" placeholder="500" value={formData.employees} onChange={e => update("employees", e.target.value)} /></div>
                 <div style={{ gridColumn: "span 2" }}>
                   <label className="gc-label">Industry / Facility Type *</label>
-                  <select style={{ ...inputSt, cursor: "pointer" }} value={formData.industry} onChange={e => update("industry", e.target.value)}>
+                  <select className="gc-select" style={{ ...inputSt, cursor: "pointer" }} value={formData.industry} onChange={e => update("industry", e.target.value)}>
                     <option value="">Select your industry…</option>
                     {INDUSTRY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
@@ -1047,7 +1047,7 @@ function CompanyFormPage({ onNavigate }: { onNavigate: (p: string) => void }) {
                 </div>
                 <div>
                   <label className="gc-label">Grid Region</label>
-                  <select style={{ ...inputSt, cursor: "pointer" }} value={formData.region} onChange={e => update("region", e.target.value)}>
+                  <select className="gc-select" style={{ ...inputSt, cursor: "pointer" }} value={formData.region} onChange={e => update("region", e.target.value)}>
                     {REGIONS.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
                   </select>
                 </div>
@@ -1068,7 +1068,7 @@ function CompanyFormPage({ onNavigate }: { onNavigate: (p: string) => void }) {
                 <div><label className="gc-label">Sanctioned Load (kW)</label><input style={inputSt} type="number" placeholder="8500" value={formData.sanctionedLoad} onChange={e => update("sanctionedLoad", e.target.value)} /></div>
                 <div>
                   <label className="gc-label">Shift Pattern</label>
-                  <select style={{ ...inputSt, cursor: "pointer" }} value={formData.shift} onChange={e => update("shift", e.target.value)}>
+                  <select className="gc-select" style={{ ...inputSt, cursor: "pointer" }} value={formData.shift} onChange={e => update("shift", e.target.value)}>
                     {SHIFT_PATTERNS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
                 </div>
@@ -1099,14 +1099,14 @@ function CompanyFormPage({ onNavigate }: { onNavigate: (p: string) => void }) {
                 </div>
                 <div>
                   <label className="gc-label">Annual Electricity Budget</label>
-                  <select style={{ ...inputSt, cursor: "pointer" }} value={formData.budgetRange} onChange={e => update("budgetRange", e.target.value)}>
+                  <select className="gc-select" style={{ ...inputSt, cursor: "pointer" }} value={formData.budgetRange} onChange={e => update("budgetRange", e.target.value)}>
                     <option value="">Select range…</option>
                     <option>₹1–5 Cr / year</option><option>₹5–25 Cr / year</option><option>₹25–100 Cr / year</option><option>₹100 Cr+ / year</option>
                   </select>
                 </div>
                 <div>
                   <label className="gc-label">Primary Optimisation Priority</label>
-                  <select style={{ ...inputSt, cursor: "pointer" }}>
+                  <select className="gc-select" style={{ ...inputSt, cursor: "pointer" }}>
                     <option>Cost Reduction (₹ savings)</option><option>Carbon Footprint (tCO₂)</option><option>Grid Reliability / Uptime</option><option>Regulatory Compliance</option>
                   </select>
                 </div>
@@ -1496,7 +1496,7 @@ function CompanyDashboard({ onNavigate }: { onNavigate: (p: string) => void }) {
                           <div><label className="gc-label">Preferred Time</label><input type="time" value={newTaskTime} onChange={e => setNewTaskTime(e.target.value)} className="gc-input" /></div>
                           <div>
                             <label className="gc-label">Grid Region</label>
-                            <select value={newTaskRegion} onChange={e => setNewTaskRegion(e.target.value)} className="gc-input" style={{ cursor: "pointer" }}>
+                            <select value={newTaskRegion} onChange={e => setNewTaskRegion(e.target.value)} className="gc-input gc-select" style={{ cursor: "pointer" }}>
                               {REGIONS.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
                             </select>
                           </div>
