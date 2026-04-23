@@ -16,7 +16,9 @@ import {
   Calendar,
   ArrowRight,
   TrendingUp,
-  Cpu
+  Cpu,
+  Activity,
+  ArrowDown
 } from "lucide-react";
 
 const HeroCanvas = dynamic(() => import("@/components/three/HeroCanvas"), {
@@ -233,12 +235,12 @@ export default function LandingPage() {
             <Link
               href="/login"
               className="gc-btn gc-btn-primary"
-              style={{ fontSize: 15, padding: "13px 28px" }}
+              style={{ fontSize: 15, padding: "13px 28px", display: "flex", alignItems: "center", gap: 8 }}
             >
-              See Live Demo →
+              See Live Demo <ArrowRight size={16} />
             </Link>
-            <a href="#how-it-works" className="gc-btn gc-btn-ghost" style={{ fontSize: 14 }}>
-              How it works ↓
+            <a href="#how-it-works" className="gc-btn gc-btn-ghost" style={{ fontSize: 14, display: "flex", alignItems: "center", gap: 8 }}>
+              How it works <ArrowDown size={16} />
             </a>
           </div>
 
@@ -743,7 +745,7 @@ export default function LandingPage() {
                 ["Peak Forecast", chartData ? `${Math.round(Math.max(...chartData.forecast)).toLocaleString()} MW` : "45,320 MW", "var(--gc-amber)"],
                 ["Model MAPE", metrics?.mape ? `${metrics.mape.toFixed(2)}%` : "2.4%", "var(--gc-green)"],
                 ["Last Updated", metrics?.dataEnd ? new Date(metrics.dataEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "14:30 IST", "var(--gc-text-2)"],
-                ["API Status", loading ? "● SYNCING" : chartData ? "● LIVE" : "○ OFFLINE", loading ? "var(--gc-amber)" : chartData ? "var(--gc-green)" : "var(--gc-red)"],
+                ["API Status", loading ? "SYNCING" : chartData ? "LIVE" : "OFFLINE", loading ? "var(--gc-amber)" : chartData ? "var(--gc-green)" : "var(--gc-red)"],
               ].map(([label, val, color]) => (
                 <div
                   key={label}
@@ -757,8 +759,12 @@ export default function LandingPage() {
                       marginBottom: 4,
                       textTransform: "uppercase",
                       letterSpacing: "0.1em",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6
                     }}
                   >
+                    {label === "API Status" && <Activity size={10} style={{ color }} />}
                     {label}
                   </div>
                   <div
@@ -1105,18 +1111,18 @@ export default function LandingPage() {
           <Link
             href="/login"
             className="gc-btn gc-btn-primary"
-            style={{ fontSize: 15, padding: "14px 36px" }}
+            style={{ fontSize: 15, padding: "14px 36px", display: "flex", alignItems: "center", gap: 10 }}
           >
-            Request a Demo →
+            Request a Demo <ArrowRight size={18} />
           </Link>
           <a
             href="https://github.com/Team-NAVGATI/GridCast"
             className="gc-btn gc-btn-ghost"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ fontSize: 15, padding: "14px 36px" }}
+            style={{ fontSize: 15, padding: "14px 36px", display: "flex", alignItems: "center", gap: 10 }}
           >
-            View on GitHub ↗
+            View on GitHub <TrendingUp size={18} />
           </a>
         </div>
 

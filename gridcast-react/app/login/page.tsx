@@ -122,9 +122,9 @@ export default function LoginPage() {
             </p>
             <div style={{ display: "flex", gap: 14, marginBottom: 8 }}>
               {[
-                { id: "admin", emoji: "🔧", title: "Admin", sub: "Grid operators, NLDC engineers, system administrators" },
-                { id: "company", emoji: "🏢", title: "Company", sub: "Industrial consumers, data centers, large enterprises" },
-              ].map(({ id, emoji, title, sub }) => (
+                { id: "admin", title: "Admin", sub: "Grid operators, NLDC engineers, system administrators" },
+                { id: "company", title: "Company", sub: "Industrial consumers, data centers, large enterprises" },
+              ].map(({ id, title, sub }) => (
                 <button
                   key={id}
                   id={`mode-${id}`}

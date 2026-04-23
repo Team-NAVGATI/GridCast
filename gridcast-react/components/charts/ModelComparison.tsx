@@ -10,11 +10,6 @@ interface ModelComparisonProps {
   lstmData: ForecastData | null;
   horizon: Horizon;
   loading: boolean;
-  status?: {
-    type: 'stable' | 'warning' | 'error';
-    message: string;
-    engine: string;
-  };
 }
 
 export function ModelComparison({
@@ -22,7 +17,6 @@ export function ModelComparison({
   lstmData,
   horizon,
   loading,
-  status,
 }: ModelComparisonProps) {
   const chartOptions = useMemo(() => {
     if (!xgboostData || !lstmData) {
@@ -33,16 +27,14 @@ export function ModelComparison({
       };
     }
 
-    const metrics = ['MAE', 'RMSE', 'MAPE'];
+    const metrics = ['MAE', 'RMSE'];
     const xgbValues = [
       xgboostData.horizon_metrics[horizon]?.mae || 0,
       xgboostData.horizon_metrics[horizon]?.rmse || 0,
-      xgboostData.horizon_metrics[horizon]?.mape || 0,
     ];
     const lstmValues = [
       lstmData.horizon_metrics[horizon]?.mae || 0,
       lstmData.horizon_metrics[horizon]?.rmse || 0,
-      lstmData.horizon_metrics[horizon]?.mape || 0,
     ];
 
     // Find max value to set headroom
@@ -136,7 +128,7 @@ export function ModelComparison({
       plotOptions: {
         bar: {
           horizontal: false,
-          columnWidth: '55%',
+          columnWidth: '45%',
           borderRadius: 6,
           dataLabels: {
             position: 'top' as const,
@@ -164,19 +156,19 @@ export function ModelComparison({
 
   return (
     <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-sm flex flex-col h-full overflow-hidden">
-      <div className="p-6 pb-2 border-b border-slate-50">
+      <div className="p-6 pb-6 border-b border-slate-50">
         <div className="flex items-center gap-2 mb-1">
           <div className="w-1.5 h-6 bg-[#003d99] rounded-full" />
-          <h3 className="text-16px font-extrabold text-[#003d99] tracking-tight uppercase">
+          <h3 className="text-16px font-extrabold text-[#003d99] tracking-tight uppercase ml-2">
             Model Comparison
           </h3>
         </div>
-        <p className="text-11px text-slate-400 font-bold uppercase tracking-wider ml-3.5">
+        <p className="text-11px text-slate-400 font-bold uppercase tracking-wider ml-[22px]">
           Backtest Performance: {horizon} Horizon
         </p>
       </div>
 
-      <div className="px-4 pt-4 flex-1">
+      <div className="px-4 py-8 flex-1">
         <Chart
           options={chartOptions}
           series={chartOptions.series}
@@ -184,26 +176,6 @@ export function ModelComparison({
           height={240}
         />
       </div>
-
-      {status && (
-        <div className="mt-auto border-t border-slate-50 bg-slate-50/50 p-4">
-          <div className={`flex items-start gap-3 p-3 rounded-lg border ${
-            status.type === 'stable' ? 'bg-emerald-50/50 border-emerald-100 text-emerald-700' :
-            status.type === 'warning' ? 'bg-amber-50/50 border-amber-100 text-amber-700' :
-            'bg-rose-50/50 border-rose-100 text-rose-700'
-          }`}>
-            <div className="mt-0.5">
-              {status.type === 'stable' ? <CheckCircle2 size={16} /> : 
-               status.type === 'warning' ? <Bell size={16} /> : 
-               <AlertCircle size={16} />}
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-tight mb-0.5">{status.engine} {status.type}</p>
-              <p className="text-11px font-medium opacity-80 leading-tight">{status.message}</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

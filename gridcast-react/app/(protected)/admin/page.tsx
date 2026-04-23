@@ -310,11 +310,6 @@ export default function AdminDashboard() {
                       lstmData={lstmData} 
                       horizon={activeHorizon}
                       loading={loading}
-                      status={{
-                        type: 'stable',
-                        message: 'Latest forecast successfully generated. MAPE variance within optimal bounds.',
-                        engine: 'XGBOOST'
-                      }}
                     />
                   </div>
                 </div>

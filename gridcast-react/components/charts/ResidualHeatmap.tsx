@@ -97,11 +97,11 @@ export function ResidualHeatmap({ data, loading }: ResidualHeatmapProps) {
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
           <div className="w-1.5 h-6 bg-[#003d99] rounded-full" />
-          <h3 className="text-16px font-extrabold text-[#003d99] tracking-tight uppercase">
+          <h3 className="text-16px font-extrabold text-[#003d99] tracking-tight uppercase ml-2">
             Residual Errors (7 Days × 24 Hours)
           </h3>
         </div>
-        <p className="text-11px text-slate-400 font-bold uppercase tracking-wider ml-3.5">
+        <p className="text-11px text-slate-400 font-bold uppercase tracking-wider ml-[22px]">
           Error distribution heatmap · Green = Optimal
         </p>
       </div>
