@@ -25,12 +25,13 @@ Production-oriented electricity load forecasting system for smart grids using a 
 9. [Runbook (End-to-End)](#runbook-end-to-end)
 10. [Forecast JSON Contract](#forecast-json-contract)
 11. [Modeling Strategy and Metrics](#modeling-strategy-and-metrics)
-12. [Observability and Logs](#observability-and-logs)
-13. [Research and Design Synthesis](#research-and-design-synthesis)
-14. [External Research Notes (Web + Context7)](#external-research-notes-web--context7)
-15. [Known Constraints](#known-constraints)
-16. [Roadmap](#roadmap)
-17. [References](#references)
+12. [Model Evaluation & Comparison](#model-evaluation--comparison)
+13. [Observability and Logs](#observability-and-logs)
+14. [Research and Design Synthesis](#research-and-design-synthesis)
+15. [External Research Notes (Web + Context7)](#external-research-notes-web--context7)
+16. [Known Constraints](#known-constraints)
+17. [Roadmap](#roadmap)
+18. [References](#references)
 
 ---
 
@@ -558,6 +559,67 @@ Contains:
 - Explainable lag/calendar feature set
 - Artifact-based serving (no online retrain dependency)
 - File-based publishing avoids keeping a prediction server online
+
+---
+
+## Model Evaluation & Comparison
+
+### Dataset & Training Setup
+
+- **Data Duration:** April 2024 to March 2026 (~59,000 rows, 15-minute intervals)
+- **Features Used:** 7 cyclic features (load + time-based: hour, day of week, month)
+- **LSTM Sequence Length:** 192 (past 48 hours of historical data)
+
+### LSTM v2 Performance by Horizon
+
+| Horizon | Avg MAPE | Status |
+|---------|----------|--------|
+| 24h     | 2.30%    | Strong and stable |
+| 48h     | 2.31%    | Slight degradation |
+| 72h     | 2.99%    | Noticeable drop |
+
+**Training Insights:**
+- Early stopping triggered between epochs 6–9
+- Learning rate reduced multiple times, indicating quick convergence
+- Model showed signs of learning strong seasonal patterns with limited model complexity
+
+### Head-to-Head Comparison: XGBoost vs LSTM v2
+
+| Horizon | XGBoost | LSTM v2 | Delta  | Winner    |
+|---------|---------|---------|--------|-----------|
+| 24h     | 1.69%   | 2.30%   | +0.61% | XGBoost   |
+| 48h     | 2.11%   | 2.31%   | +0.20% | XGBoost   |
+| 72h     | 2.74%   | 2.99%   | +0.25% | XGBoost   |
+
+### Key Findings
+
+**1. XGBoost Superiority**
+- Consistently outperforms LSTM across all forecast horizons
+- Well-suited for structured/tabular data with engineered features
+- Maintains stability and accuracy even at 72-hour horizon
+
+**2. LSTM Limitations**
+- Only basic time-based features utilized
+- Missing important external variables: weather data, holidays, demand anomalies
+- Prevents effective exploitation of temporal dependencies
+
+**3. Long-Horizon Forecast Challenge (72h)**
+- Significant error increase observed across both models
+- Instability in later backtest windows
+- Indicates inherent difficulty in extended forecasting
+
+### Deployment Recommendation
+
+**Primary Model: XGBoost**
+- Production deployment due to superior accuracy and stability
+- Easier maintenance and explainability
+- Consistent performance across all horizons
+- Error remains under 3%, meeting industry-standard requirements
+
+**Secondary Use: LSTM**
+- Suitable for research and experimentation
+- Foundation for future hybrid or ensemble models
+- Opportunity for enhancement with external feature integration
 
 ---
 
