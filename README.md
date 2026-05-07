@@ -1,6 +1,6 @@
 #  GridCast — Smart Grid Load Prediction (Team NavGati)
 
-Production-oriented electricity load forecasting system for smart grids using a **data pipeline + XGBoost model + Flask API + dashboard frontend**.
+Production-oriented electricity load forecasting system for smart grids using a **data pipeline + offline-trained models + JSON forecast artifacts + dashboard frontend**.
 
 ---
 <img width="1920" height="1531" alt="image" src="https://github.com/user-attachments/assets/ec446b6a-37fd-4e59-ad23-544d84ec0da1" />
@@ -19,11 +19,11 @@ Production-oriented electricity load forecasting system for smart grids using a 
    - [Scraper (`src/scrapping/scrap_excel.py`)](#1-scraper-srcscrappingscrap_excelpy)
    - [Merger (`src/ingestion/data_merger.py`)](#2-merger-srcingestiondata_mergerpy)
    - [Cleaner (`src/ingestion/data_cleaning.py`)](#3-cleaner-srcingestiondata_cleaningpy)
-   - [Training (`src/pipeline/train_and_save.py`)](#4-training-srcpipelinetrain_and_savepy)
-   - [API (`src/api/app.py`)](#5-api-srcapiapppy)
-   - [Frontend (`src/Frontend/dashboard.html`)](#6-frontend-srcfrontenddashboardhtml)
+    - [Training and Forecast Publishing (`src/pipeline/xgboost/train_and_save_xgboost.py`, `src/pipeline/pre_generate.py`)](#4-training-and-forecast-publishing-srcpipelinexgboosttrain_and_save_xgboostpy-srcpipelinepre_generatepy)
+    - [Forecast JSON Artifacts](#5-forecast-json-artifacts)
+    - [Frontend (`gridcast-react/`)](#6-frontend-gridcast-react)
 9. [Runbook (End-to-End)](#runbook-end-to-end)
-10. [API Contract](#api-contract)
+10. [Forecast JSON Contract](#forecast-json-contract)
 11. [Modeling Strategy and Metrics](#modeling-strategy-and-metrics)
 12. [Observability and Logs](#observability-and-logs)
 13. [Research and Design Synthesis](#research-and-design-synthesis)
@@ -40,10 +40,12 @@ This project builds an AI-assisted forecasting workflow for **short-term electri
 
 - Automated historical forecast-file collection from NRLDC web portal
 - Structured extraction and cleaning pipeline for 15-minute demand series
-- Feature-engineered XGBoost training with seasonal holdout validation
+- Feature-engineered local training with seasonal holdout validation
+- JSON forecast publishing for 24h, 48h, and 72h horizons
 - Precomputed residual heatmap for operational reliability analysis
-- Flask API serving 24-hour (96-step) forecasts
-- Dashboard UI for operations teams to view forecast, KPIs, and residual patterns
+- Next.js dashboard UI that reads static forecast JSON files and displays KPIs, forecasts, and residual patterns
+
+The current serving constraint is file-based rather than API-based: the model is trained on your machine, forecast outputs are materialized as JSON, and the frontend consumes those JSON files directly.
 
 The system is designed as a practical bridge between research-grade forecasting and operations-grade deployment patterns.
 
@@ -71,12 +73,12 @@ This repository addresses that gap with a reproducible ML pipeline and lightweig
 
 ## What This Repository Delivers
 
-- **Forecast horizon:** 24 hours ahead at 15-minute granularity (`96` steps)
-- **Model family:** XGBoost (season-aware split, autoregressive inference)
+- **Forecast horizon:** 24, 48, and 72 hours ahead at 15-minute granularity (`96`, `192`, and `288` steps)
+- **Model family:** XGBoost and LSTM artifacts trained through the project pipeline (season-aware split, autoregressive inference)
 - **Data cadence:** 15-minute load points
-- **Pipeline stages:** scrape → extract/merge → clean → train → serve → visualize
-- **Model artifacting:** `joblib` model + JSON metadata/buffer
-- **Operational diagnostics:** residual heatmap over day-of-week × hour-of-day
+- **Pipeline stages:** scrape → extract/merge → clean → train → generate JSON forecasts → sync → visualize
+- **Model artifacting:** `joblib` model + JSON metadata/buffer + forecast JSON files + metrics/residuals JSON files
+- **Operational diagnostics:** residual heatmap over day-of-week × hour-of-day, published as JSON for the dashboard
 
 ---
 
@@ -87,39 +89,83 @@ requirements.txt
 README.md
 
 data/
-  raw/                # downloaded NRLDC files by year/month
-  extracted/          # merged extracted parquet
-  cleaned/            # cleaned parquet used for training
-  model/
-    xgboost_model.joblib
-    buffer.json
+|-- raw/                 # downloaded NRLDC files by year/month
+|   |-- 2024/
+|   |   |-- <month folders by year>
+|   |-- 2025/
+|   |   |-- <month folders by year>
+|   `-- 2026/
+|       `-- <month folders by year>
+|-- extracted/           # merged extracted parquet
+|-- cleaned/             # cleaned parquet used for training
+|-- model/
+|   |-- xgboost/
+|   |   |-- xgboost_model.joblib
+|   |   `-- buffer.json
+|   `-- lstm/
+|       |-- 24h.keras
+|       |-- 48h.keras
+|       |-- 72h.keras
+|       `-- buffer.json
+`-- public/
+    `-- data/
+        |-- xgboost/
+        |   |-- forecast_24h.json
+        |   |-- forecast_48h.json
+        |   |-- forecast_72h.json
+        |   |-- metrics.json
+        |   `-- residuals.json
+        `-- lstm/
+            |-- forecast_24h.json
+            |-- forecast_48h.json
+            |-- forecast_72h.json
+            |-- metrics.json
+            `-- residuals.json
 
 docs/
-  research.md
-  system_design.md
-  synopsis/
-    Synopsis Report-NavGati Updated.pdf
+|-- design/
+|   |-- architecture.md
+|   `-- system_design.md
+|-- overview/
+|   |-- problem_statement.md
+|   `-- project_overview.md
+|-- research/
+|   |-- base_papers.md
+|   `-- model_analysis.md
+`-- synopsis/
+    `-- Synopsis Report-NavGati Updated.pdf
 
 logs/
-  scrap_excel.log
-  data_merger.log
+|-- scrap_excel.log
+`-- data_merger.log
 
 notebooks/
-  01_eda.ipynb
-  02_Baseline_model.ipynb
+|-- 01_eda.ipynb
+|-- 02_baseline_models.ipynb
+|-- 03_model_comparison.ipynb
+|-- 04_xgboost_forecasting.ipynb
+|-- 05_lstm_forecasting.ipynb
+`-- 06_lstm_model_saving.ipynb
 
 src/
-  scrapping/
-    scrap_excel.py
-  ingestion/
-    data_merger.py
-    data_cleaning.py
-  pipeline/
-    train_and_save.py
-  api/
-    app.py
-  Frontend/
-    dashboard.html
+|-- scrapping/
+|   `-- scrap_excel.py
+|-- ingestion/
+|   |-- data_merger.py
+|   `-- data_cleaning.py
+`-- pipeline/
+    |-- pre_generate.py
+    `-- xgboost/
+        `-- train_and_save_xgboost.py
+
+gridcast-react/
+|-- app/
+|-- components/
+|-- lib/
+|-- public/
+|   `-- data/
+`-- scripts/
+    `-- sync-real-data.mjs
 ```
 
 ---
@@ -136,12 +182,14 @@ flowchart TD
     D --> E[data/extracted/nrldc_extracted.parquet]
     E --> F[data_cleaning.py\nSpike/range detection + interpolation]
     F --> G[data/cleaned/nrldc_cleaned.parquet]
-    G --> H[train_and_save.py\nFeature engineering + XGBoost]
-    H --> I[data/model/xgboost_model.joblib]
-    H --> J[data/model/buffer.json]
-    I --> K[app.py\nFlask inference service]
+    G --> H[train_and_save_xgboost.py\nModel training + buffer.json]
+    H --> I[data/model/xgboost/xgboost_model.joblib]
+    H --> J[data/model/xgboost/buffer.json]
+    I --> K[pre_generate.py\nGenerate 24h/48h/72h JSON forecasts]
     J --> K
-    K --> L[dashboard.html\nForecast + KPIs + heatmap]
+    K --> L[data/public/data/*\nforecast_*.json + metrics.json + residuals.json]
+    L --> M[sync-real-data.mjs\nMirror artifacts to frontend]
+    M --> N[gridcast-react\nNext.js dashboard]
 ```
 
 ### 2) Forecast Serving Sequence
@@ -149,20 +197,16 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     participant UI as Dashboard
-    participant API as Flask API
-    participant M as xgboost_model.joblib
-    participant B as buffer.json
+    participant F as Static JSON files
+    participant M as Model artifacts
 
-    UI->>API: GET /health
-    API-->>UI: model metadata + metrics
-
-    UI->>API: GET /forecast
-    API->>B: Load latest buffer in memory
-    API->>M: Autoregressive step prediction (96x)
-    API-->>UI: forecast array [{datetime, load_mw}]
-
-    UI->>API: GET /residuals
-    API-->>UI: heatmap_matrix (7x24 APE)
+    UI->>F: GET /data/xgboost/forecast_24h.json
+    UI->>F: GET /data/xgboost/forecast_48h.json
+    UI->>F: GET /data/xgboost/forecast_72h.json
+    UI->>F: GET /data/xgboost/metrics.json
+    UI->>F: GET /data/xgboost/residuals.json
+    F-->>UI: forecast rows + metrics + residual heatmap
+    M-->>F: pre_generate.py materializes JSON from trained model
 ```
 
 ### 3) Data Quality Logic
@@ -187,7 +231,8 @@ flowchart LR
 - **Language:** Python 3.x, JavaScript, HTML/CSS
 - **Data:** pandas, pyarrow, fastparquet
 - **ML:** xgboost, scikit-learn, numpy, joblib
-- **API:** Flask, Flask-CORS
+- **Serving:** JSON artifact publishing plus static file delivery through the frontend
+- **Frontend:** Next.js, React, TypeScript, Tailwind CSS
 - **Automation:** selenium, webdriver-manager
 - **Notebook analysis:** Jupyter notebooks under `notebooks/`
 
@@ -211,8 +256,12 @@ flowchart LR
 2. **Cleaned parquet** (`data/cleaned/nrldc_cleaned.parquet`)
    - datetime index
    - column: `actual_demand_mw`
-3. **Model metadata** (`data/model/buffer.json`)
+3. **Model metadata** (`data/model/xgboost/buffer.json`, `data/model/lstm/buffer.json`)
    - `feature_cols`, `test_metrics`, rolling `buffer`, residual heatmap artifacts
+4. **Forecast JSON artifacts** (`data/public/data/<model>/forecast_24h.json`, `forecast_48h.json`, `forecast_72h.json`)
+   - `generated_at`, `model`, `data_end`, `trained_at`, `horizon`, `steps`, `forecast`
+5. **Diagnostics JSON artifacts** (`data/public/data/<model>/metrics.json`, `residuals.json`)
+   - `horizon_metrics`, `heatmap_matrix`, `heatmap_flat`, `heatmap_info`
 
 ---
 
@@ -314,15 +363,15 @@ Applies physically grounded anomaly detection and interpolation repair to demand
 
 ---
 
-## 4) Training (`src/pipeline/train_and_save.py`)
+## 4) Training and Forecast Publishing (`src/pipeline/xgboost/train_and_save_xgboost.py`, `src/pipeline/pre_generate.py`)
 
 ### Purpose
-Builds model-ready features, performs season-aware split, trains XGBoost, evaluates, computes residual heatmap, and persists artifacts.
+Builds model-ready features, performs season-aware split, trains XGBoost, evaluates, computes residual heatmap, and then publishes JSON forecast artifacts for the frontend.
 
 ### Key constants
 
 - `BUFFER_LEN = 672` (1 week of 15-min history)
-- `STEPS = 96` (24-hour horizon)
+- `HORIZONS = {"24h": 96, "48h": 192, "72h": 288}`
 - `HOLDOUT_MONTHS = 3`
 
 ### Function-by-function details
@@ -334,44 +383,52 @@ Builds model-ready features, performs season-aware split, trains XGBoost, evalua
 | `evaluate(y_true, y_pred, label='')` | true and predicted arrays | metrics dict | Computes MAE, RMSE, MAPE |
 | `forecast_from(cutoff_idx, series, model, feature_cols)` | cutoff index, series, model, feature order | `(pred_index, preds, actuals)` | 96-step autoregressive forecasting loop from a single cutoff |
 | `compute_residual_heatmap(series, model, feature_cols, test_start_idx)` | series, model, features, test start index | `(matrix, flat_list)` | Runs repeated cutoffs over test period and computes mean APE by day/hour bucket |
+| `run_xgb_forecast(horizon, model, buffer_meta)` | horizon, model, buffer metadata | prediction list | Generates 24h/48h/72h autoregressive forecasts |
+| `save_json(preds, horizon, model_name, buffer_meta)` | forecast list, horizon, model name, metadata | JSON payload dict | Shapes the prediction payload for file-based publishing |
 
 ### Artifact outputs
 
-- `data/model/xgboost_model.joblib`
-- `data/model/buffer.json` containing:
+- `data/model/xgboost/xgboost_model.joblib`
+- `data/model/xgboost/buffer.json` containing:
   - model metadata (`trained_at`, `data_end`, `feature_cols`)
   - `test_metrics`
   - last 672 observed loads (`buffer`)
   - residual heatmap (`heatmap_matrix`, `heatmap_flat`, `heatmap_info`)
+- `data/public/data/xgboost/forecast_24h.json`, `forecast_48h.json`, `forecast_72h.json`
+- `data/public/data/xgboost/metrics.json`
+- `data/public/data/xgboost/residuals.json`
+
+The LSTM pipeline follows the same publishing contract under `data/public/data/lstm/`.
 
 ---
 
-## 5) API (`src/api/app.py`)
+## 5) Forecast JSON Artifacts
 
 ### Purpose
-Loads model + metadata once at startup and serves low-latency forecast and diagnostics endpoints.
+The forecast is not served by a live inference API in the current setup. Instead, `src/pipeline/pre_generate.py` loads the saved model artifacts, generates 24h/48h/72h predictions, and writes ready-to-consume JSON files for the frontend.
 
-### Function-by-function details
+### Generated files
 
-| Function | Route | Method | Output |
-|---|---|---|---|
-| `run_forecast()` | internal | internal | Generates 96-step forecast using autoregressive feature updates |
-| `health()` | `/health` | `GET` | API status, model metadata, test metrics |
-| `residuals()` | `/residuals` | `GET` | 7×24 residual heatmap data from training artifact |
-| `forecast()` | `/forecast` | `GET` | full forecast payload + metadata |
+| File | Purpose |
+|---|---|
+| `forecast_24h.json` | 96-step forecast for the next 24 hours |
+| `forecast_48h.json` | 192-step forecast for the next 48 hours |
+| `forecast_72h.json` | 288-step forecast for the next 72 hours |
+| `metrics.json` | Horizon metrics and training timestamps |
+| `residuals.json` | 7×24 residual heatmap data |
 
 ### Runtime notes
 
-- Uses `Flask` + `Flask-CORS`
-- Uses `use_reloader=False` to avoid duplicate startup loads
-- Exposes service on `0.0.0.0:5000`
+- Files are written to `data/public/data/<model>/` and mirrored into `gridcast-react/public/data/<model>/`
+- The frontend reads these files directly, so there is no mandatory always-on Flask service
+- `gridcast-react/scripts/sync-real-data.mjs` validates that the required JSON artifacts exist after sync
 
 ---
 
-## 6) Frontend (`src/Frontend/dashboard.html`)
+## 6) Frontend (`gridcast-react/`)
 
 ### Purpose
-Single-file dashboard that fetches API data and renders operational forecast views, KPIs, model comparison, residual heatmap, and CSV export.
+Next.js dashboard that reads the generated JSON artifacts from `public/data`, renders operational forecast views, KPIs, model comparison, residual heatmap, and CSV export.
 
 ### JavaScript function reference
 
@@ -381,9 +438,9 @@ Single-file dashboard that fetches API data and renders operational forecast vie
 | `fmtMW(n)` | number | string | Adds `MW` unit suffix |
 | `mapeClass(v)` | number | class token | Maps MAPE to `good/warn/bad` styling |
 | `nowIST()` | none | string | Current IST time string |
-| `loadForecast()` | none | Promise | Fetches `/health`, `/forecast`, `/residuals` and triggers render |
+| `loadForecast()` | none | Promise | Fetches `public/data/<model>/forecast_*.json`, `metrics.json`, and `residuals.json` and triggers render |
 | `refreshForecast()` | none | None | Manual refresh hook |
-| `renderAll(health, data)` | API payloads | None | Updates all dashboard sections from latest data |
+| `renderAll(health, data)` | JSON payloads | None | Updates all dashboard sections from latest data |
 | `drawForecastChart(fc, peak, peakIdx)` | forecast list + peak metadata | None | Draws SVG line + confidence band + tooltip behaviors |
 | `buildHeatmap(matrix)` | 7×24 matrix or null | None | Renders real residual heatmap or static fallback |
 | `exportCSV()` | none | None | Exports forecast rows as CSV file |
@@ -392,8 +449,8 @@ Single-file dashboard that fetches API data and renders operational forecast vie
 ### UI interaction model
 
 - On load: `setupNavTabs(); loadForecast();`
-- Error handling: Shows API connectivity banner when fetch fails
-- Progressive enhancement: if `/residuals` unavailable, uses fallback heatmap
+- Error handling: Shows a data-loading banner when the JSON artifacts are missing or stale
+- Progressive enhancement: if `/residuals.json` is unavailable, uses fallback heatmap
 
 ---
 
@@ -403,6 +460,8 @@ Single-file dashboard that fetches API data and renders operational forecast vie
 
 ```bash
 pip install -r requirements.txt
+cd gridcast-react
+npm install
 ```
 
 ## 2) Run data ingestion
@@ -413,48 +472,69 @@ python src/ingestion/data_merger.py
 python src/ingestion/data_cleaning.py
 ```
 
-## 3) Train and persist model
+## 3) Train the model on your machine
 
 ```bash
-python src/pipeline/train_and_save.py
+python src/pipeline/xgboost/train_and_save_xgboost.py
 ```
 
-## 4) Start API
+## 4) Generate forecast JSON artifacts
 
 ```bash
-python src/api/app.py
+python src/pipeline/pre_generate.py
 ```
 
-## 5) Open frontend
+## 5) Sync artifacts to the frontend
 
-Open `src/Frontend/dashboard.html` in browser (ensure API is running on `http://localhost:5000`).
+```bash
+cd gridcast-react
+npm run sync:data
+```
+
+## 6) Open frontend
+
+```bash
+cd gridcast-react
+npm run dev:real
+```
+
+Open `http://localhost:3000` in your browser.
 
 ---
 
-## API Contract
+## Forecast JSON Contract
 
-### `GET /health`
+### `forecast_24h.json`, `forecast_48h.json`, `forecast_72h.json`
 
-Returns service and model metadata.
+Each forecast artifact contains:
 
-### `GET /forecast`
-
-Returns:
-
-- generation timestamp
-- model details
-- horizon metadata
-- `forecast` array with 96 points:
+- `generated_at`
+- `model`
+- `data_end`
+- `trained_at`
+- `horizon`
+- `horizon_h`
+- `steps`
+- `horizon_metrics`
+- `forecast` array with timestamped values:
   - `datetime` (string)
   - `load_mw` (number)
 
-### `GET /residuals`
+### `metrics.json`
 
-Returns:
+Contains:
+
+- `trained_at`
+- `data_end`
+- `horizon_metrics`
+
+### `residuals.json`
 
 - `heatmap_matrix` (`7x24`, day-of-week × hour)
 - `heatmap_flat` (168 values)
 - `heatmap_info`
+- `trained_at`
+- `data_end`
 
 ---
 
@@ -477,6 +557,7 @@ Returns:
 - Fast inference
 - Explainable lag/calendar feature set
 - Artifact-based serving (no online retrain dependency)
+- File-based publishing avoids keeping a prediction server online
 
 ---
 
@@ -484,7 +565,8 @@ Returns:
 
 - `logs/scrap_excel.log`: scraping execution summary and failures
 - `logs/data_merger.log`: extraction/merge completion summaries
-- API startup prints model metadata, training time, and data end timestamp
+- Training and JSON generation scripts print model metadata, training time, and data end timestamp
+- The frontend sync script fails fast if a required JSON artifact is missing
 
 Suggested production add-ons:
 
@@ -496,7 +578,7 @@ Suggested production add-ons:
 
 ## Research and Design Synthesis
 
-Based on `docs/research.md` and `docs/system_design.md`, the project direction combines:
+Based on `docs/overview/project_overview.md`, `docs/design/system_design.md`, and `docs/research/model_analysis.md`, the project direction combines:
 
 - Time-series forecasting for grid stability
 - Data engineering rigor (validation, cleaning, feature pipelines)
@@ -508,7 +590,7 @@ Design patterns reflected in code:
 - Modular pipeline stages
 - Artifact-based model lifecycle
 - Monitoring-oriented residual diagnostics
-- API + dashboard for applied decision support
+- Static artifacts + dashboard for applied decision support
 
 > Note: `docs/synopsis/Synopsis Report-NavGati Updated.pdf` is included in repository documentation scope but is not machine-parsed in this README generation flow.
 
@@ -525,7 +607,7 @@ Design patterns reflected in code:
 ### Library guidance (Context7)
 
 - **XGBoost (`/dmlc/xgboost`)**: strong fit for tabular time-series feature sets, scikit-learn style `XGBRegressor`, robust parameterization and importance analysis.
-- **Flask (`/pallets/flask`)**: standard route and JSON serving patterns, stable local server model.
+- **Next.js / static hosting**: standard public-asset patterns for serving forecast JSON files directly to the dashboard.
 - **Pandas (`/pandas-dev/pandas`)**: DatetimeIndex-first operations and `interpolate(method='time')` align with this project’s cleaning path.
 
 ---
@@ -535,7 +617,7 @@ Design patterns reflected in code:
 - Scraper relies on target portal DOM stability; UI changes may require selector updates.
 - No formal test suite is currently present.
 - Current pipeline is single-region operationalized (North) though docs discuss multi-region ambitions.
-- API currently serves from static artifacts; online updates require explicit retraining.
+- The dashboard consumes static artifacts; online updates require explicit retraining and re-syncing of JSON files.
 
 ---
 
@@ -543,7 +625,7 @@ Design patterns reflected in code:
 
 1. Add weather/exogenous features for peak-window robustness.
 2. Add model registry and retraining scheduler.
-3. Add CI tests for pipeline invariants and API contracts.
+3. Add CI tests for pipeline invariants and forecast JSON contracts.
 4. Add region abstraction for North/South/East/West scaling.
 5. Integrate LSTM/GRU pipeline as optional model backend.
 
@@ -553,8 +635,12 @@ Design patterns reflected in code:
 
 ### Repository documentation
 
-- `docs/research.md`
-- `docs/system_design.md`
+- `docs/overview/project_overview.md`
+- `docs/overview/problem_statement.md`
+- `docs/design/architecture.md`
+- `docs/design/system_design.md`
+- `docs/research/base_papers.md`
+- `docs/research/model_analysis.md`
 - `docs/synopsis/Synopsis Report-NavGati Updated.pdf`
 
 ### External
@@ -572,15 +658,20 @@ Design patterns reflected in code:
 
 ```bash
 pip install -r requirements.txt
+python src/scrapping/scrap_excel.py
 python src/ingestion/data_merger.py
 python src/ingestion/data_cleaning.py
-python src/pipeline/train_and_save.py
-python src/api/app.py
+python src/pipeline/xgboost/train_and_save_xgboost.py
+python src/pipeline/pre_generate.py
+cd gridcast-react
+npm install
+npm run sync:data
+npm run dev:real
 ```
 
 Then open dashboard:
 
-- `src/Frontend/dashboard.html`
+- `http://localhost:3000`
 
 ---
 
